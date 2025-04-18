@@ -1,0 +1,48 @@
+/* Prettified by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io */
+
+#HeroBaseStats
+{
+    flow-children: down;
+    horizontal-align:center;
+    border:1px solid rgb(124, 124, 124);
+    box-shadow: inset #8080806c 0px 0px 1px 1px;
+    padding: 10px 0;
+    background-color: rgb(14, 14, 14);
+}
+
+#HeroBaseStats .HeroStatsSectionWrapper
+{
+    flow-children:right;
+    horizontal-align:center;
+    margin-bottom: 15px;
+    margin-right: 25px;
+}
+
+#HeroBaseStats .HeroStatsSection
+{
+    horizontal-align:center;
+    margin-right: 0;
+    margin-left: 25px;
+}
+
+#HeroBaseStats .HeroStatsSection.StatsWider
+{
+    width: 100%;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+#HeroBaseStats .HeroStatsHeader
+{
+    text-align: center;
+    horizontal-align:center;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+#HeroBaseStats #HealthRow,#HeroBaseStats #ManaRow
+{
+    width: 100%;
+}
+

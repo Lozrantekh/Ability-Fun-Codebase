@@ -1,0 +1,177 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/hudstyles.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/hud_main.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/spell_upgrades.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/keybinds.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/tooltips_ability_upgrade.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/spell_upgrades.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/hud_main.vjs_c" />
+    </scripts>
+    <Panel class="HudMainRootContainer" hittest="false">
+        <Panel id="TopPanelIconsWrapper" hittest="false" disallowedstyleflags="hover,descendantfocus">
+            <Panel id="PlayerCustomKeyBindsButton" class="TopMenuButtons" hittest="true" onactivate="CustomKeyBindingSettings()" onmouseover="UIShowTextTooltip( #DOTA_AD_2023_hud_keybind_settings )" onmouseout="UIHideTextTooltip();" />
+        </Panel>
+        <Panel id="TopPanelInfo" hittest="false">
+            <Panel id="JungleCreepTreasuresLimitRoot" hittest="false">
+
+            </Panel>
+        </Panel>
+        <Panel id="TopRankMMRWrapper">
+            <Label class="TopRankMMRLabel" text="TOP 100 MMR RANKING" />
+            <Panel id="TopRankMMRPlayersWrapper" />
+        </Panel>
+        <Panel id="AbilityRewardsMainWrapper" hittest="true" onactivate="OnAbilityRewardClick()" oncontextmenu="ClearRightClick()">
+            <Panel class="CloseButton" hittest="true" onactivate="ClosePanel(&apos;AbilityRewardsMainWrapper&apos;, false)" />
+            <Panel class="SupporterRerollImgWrapper" onactivate="RerollAbilityUpgrades()">
+                <Image class="SupporterRerollImg" scaling="stretch-to-cover-preserve-aspect" src="s2r://panorama/images/compendium/international2020/underdraft/reroll_png.vtex" />
+                <Panel class="SupporterRerollCounterWrapper">
+                    <Label id="SupporterRerollTalentCounter" text="0" />
+                </Panel>
+            </Panel>
+            <Panel class="AbilityRewardsExtraInfo">
+                <Panel id="AbilityUpgradesGoldenUpgrade">
+                    <Label class="SupporterUpgradeSkipCounterLabel" text="Ability Golden Upgrades:" html="true" />
+                    <Label id="AbilityUpgradesGoldenUpgradeCounter" text="0" />
+                </Panel>
+                <Panel id="SupporterUpgradesSkipWrapper">
+                    <Label class="SupporterUpgradeSkipCounterLabel" text="Ability Skip Upgrades:" html="true" />
+                    <Label id="SupporterUpgradeSkipCounter" text="0" />
+                </Panel>
+            </Panel>
+            <Label class="AbilityRewardMainLabel" text="Choose Your Upgrade!" />
+            <Panel class="AbilityRewardsBackground" />
+            <Panel id="AbilityRewardsWrapper" hittest="true" />
+        </Panel>
+        <Panel id="AbilityUpgradeSceneWrapper" hittest="false">
+            <Panel id="AbilityUpgradeScenesContainer" hittest="false">
+                <DOTAParticleScenePanel class="AbilityUpgradeSparkleParticles" hittest="false" particleName="particles/creatures/aghanim/aghanim_crystal_spellswap_ambient_sparkle.vpcf" particleonly="true" startActive="true" cameraOrigin="200 0 95" lookAt="0 0 85" fov="80" squarePixels="true" />
+                <DOTAParticleScenePanel id="AbilityUpgradeParticles" hittest="false" renderdeferred="false" particleName="particles/effects/golden_treasure/treasure_opening_explosion.vpcf" particleonly="true" cameraOrigin="0 0 260" lookAt="0 30 0" fov="90" squarePixels="true" />
+                <DOTAScenePanel id="AbilityUpgradeScene" hittest="false" renderdeferred="false" map="backgrounds/ogre_magi_spell_booster" light="light" camera="camera1" particleonly="false" />
+                <Label id="AbilityUpgradeCountLabel" text="" hittest="false" />
+                <Panel id="AbilityUpgradeTreasureClick" hittest="true" onmouseactivate="OpenAbilityRewardsChoice()" oncontextmenu="ClearRightClick()" />
+            </Panel>
+        </Panel>
+        <Panel id="CustomCosmeticInventoryRoot" />
+        <Panel id="PlayerCustomKeyBindRoot" />
+        <Panel hittest="false" id="PlayerExtraInfoPanel">
+            <Panel class="PlayerExtraInfoImageWrapper">
+                <DOTAAbilityImage id="AbilityExtraInfoImage" hittest="false" />
+                <DOTAItemImage id="ArtifactItemImageLevelUp" hittest="false" />
+                <Image hittest="false" id="StatusExtraInfoImage" scaling="stretch-to-cover-preserve-aspect" src="s2r://panorama/images/status_icons/information_psd.vtex" />
+            </Panel>
+            <Label hittest="false" id="PlayerExtraInfoPanelLabel" text="" />
+        </Panel>
+    </Panel>
+    <snippets>
+        <snippet name="AghsScepterNewAbilitySnippet">
+            <Panel class="InsetContainer GrantedAbility">
+                <Panel class="DetailsContainer">
+                    <DOTAAbilityImage id="ScepterAbilityImage" scaling="stretch-to-cover-preserve-aspect" showtooltip="false" />
+                    <Panel class="AbilityInfo">
+                        <Panel class="AbilityTypeTitle">
+                            <Label class="AbilityName" html="true" text="{s:scepter_granted_ability}" />
+                            <Label class="TypeTitle" text="#DOTA_AbilityTooltip_Aghs_New_Ability" />
+                        </Panel>
+                        <Label class="AbilityDescription" text="{s:scepter_upgrade_description}" html="true" />
+                        <Label class="AghsScepterAbilityCharges" text="#DOTA_AbilityTooltip_AbilityCharges" html="true" />
+                        <Label class="AbilitySpecialKeys" text="{s:scepter_ability_keys}" html="true" />
+                        <Panel id="AbilityCosts">
+                            <Label id="AbilityCooldown" class="Cooldown" text="#DOTA_AbilityTooltip_Cooldown" html="true" />
+                            <Label id="AbilityManaCost" class="ManaCost" text="#DOTA_AbilityTooltip_ManaCost" html="true" />
+                        </Panel>
+                    </Panel>
+                </Panel>
+            </Panel>
+        </snippet>
+        <snippet name="AghsScepterSnippet">
+            <Panel class="InsetContainer">
+                <Panel class="DetailsContainer">
+                    <DOTAAbilityImage id="ScepterAbilityImage" scaling="stretch-to-cover-preserve-aspect" showtooltip="false" />
+                    <Panel class="AbilityInfo">
+                        <Panel class="AbilityTypeTitle">
+                            <Label class="AbilityName" html="true" text="{s:scepter_granted_ability}" />
+                            <Label class="TypeTitle" text="#DOTA_AbilityTooltip_Upgrade" />
+                        </Panel>
+                        <Label class="AbilityDescription" text="{s:scepter_upgrade_description}" html="true" />
+                        <Label class="AbilitySpecialKeys" text="{s:scepter_ability_keys}" html="true" />
+                    </Panel>
+                </Panel>
+            </Panel>
+        </snippet>
+        <snippet name="InlineScepterHeader">
+            <Panel class="InlineScepterHeader">
+                <Panel id="AghsStatusScepterContainer">
+                    <Panel id="AghsStatusScepterIcon" />
+                    <DOTAParticleScenePanel id="AghsStatusScepterScene" particleonly="true" cameraOrigin="400 0 0" lookAt="180 0 0" fov="20" hittest="false" />
+                </Panel>
+                <Label class="AghsTitle" text="#DOTA_AbilityTooltip_Aghs_Scepter" />
+            </Panel>
+        </snippet>
+        <snippet name="InlineShardHeader">
+            <Panel class="InlineShardHeader">
+                <Panel id="AghsStatusShardContainer">
+                    <Panel id="AghsStatusShardIcon" />
+                    <DOTAParticleScenePanel id="AghsStatusShardScene" particleonly="true" cameraOrigin="400 0 0" lookAt="180 0 0" fov="20" hittest="false" />
+                </Panel>
+                <Label class="AghsTitle" text="#DOTA_AbilityTooltip_Aghs_Shard" />
+            </Panel>
+        </snippet>
+        <snippet name="NoUpgradeSnippet">
+            <Panel class="NoChildrenLabel">
+                <Label text="#DOTA_AbilityTooltip_No_Aghs_Upgrade_Found" />
+            </Panel>
+        </snippet>
+        <snippet name="TopRankMMRPlayer">
+            <Panel class="TopRankMMRPlayer">
+                <Label class="TopRankMMRPlayerPosition" text="" />
+                <DOTAAvatarImage class="TopRankMMRPlayerAvatar" />
+                <DOTAUserName class="TopRankMMRPlayerName" />
+                <Label class="TopRankMMRPlayerNumber" text="" />
+            </Panel>
+        </snippet>
+        <snippet name="AbilityRewardRoot">
+            <Panel class="AbilityRewardRoot">
+                <Panel class="AbilityRewardContainer">
+                    <Panel class="AbilityRewardLabel">
+                        <Label class="AbilityRewardTitle" text="" />
+                    </Panel>
+                    <Panel class="AbilityRewardPicture" />
+                    <Panel class="AbilityRewardInfoWrapper">
+                        <Panel class="AbilityRewardInfo">
+                            <Panel class="AbilityRewardScepterUpgrade">
+                                <Label class="AbilityRewardScepterLabel" text="Scepter" />
+                                <Image class="AbilityRewardScepterImg" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/hud/reborn/aghsstatus_scepter_on_psd.vtex" />
+                            </Panel>
+                            <Panel class="AbilityUpgradeLabelWrapper">
+                                <Label class="AbilityUpgradeLabel" text="" html="true" />
+                            </Panel>
+                            <Panel class="AbilityRewardShardUpgrade">
+                                <Label class="AbilityRewardShardLabel" text="Shard" />
+                                <Image class="AbilityRewardShardImg" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/hud/reborn/aghsstatus_shard_on_psd.vtex" />
+                            </Panel>
+                            <Label class="AbilityUpgradeValue" text="" />
+                            <Panel class="AbilityUpgradeValueLimits">
+                                <Label class="AbilityUpgradeMinValue" text="" html="true" />
+                                <Label class="AbilityUpgradeMaxValue" text="" html="true" />
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                    <Panel class="AbilityRewardButton">
+                        <Button class="AbilityRewardButtonPick" onactivate="ChooseAbilityReward()">
+                            <Label text="Pick" />
+                        </Button>
+                    </Panel>
+                </Panel>
+                <Panel class="AbilityRewardToggleButtonWrapper">
+                    <ToggleButton checked="false" class="AbilityRewardToggleButton" text="" />
+                </Panel>
+            </Panel>
+        </snippet>
+    </snippets>
+</root>

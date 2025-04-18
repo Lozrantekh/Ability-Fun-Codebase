@@ -1,0 +1,275 @@
+"use strict";
+
+CustomNetTables.SubscribeNetTableListener( "global_info", UpdateGameInfo )
+CustomNetTables.SubscribeNetTableListener( "jungle_treasures_limit", UpdateJungleCreepTreasures )
+
+function UpdateGameInfo()
+{
+    let gameInfoData = CustomNetTables.GetTableValue( "global_info", "game_info" )
+
+    if (gameInfoData != null) 
+    {
+        if (typeof(gameInfoData["server_reconnecting_status"]) !== "undefined") {
+            let reconnectIcon = $("#ConnectionStatusIcon")
+
+            if (reconnectIcon != null) {
+                reconnectIcon.SetHasClass("Reconnecting", gameInfoData["server_reconnecting_status"] == 1)
+            }
+        }
+    }
+}
+
+function UpdateJungleCreepTreasures()
+{
+    let radiantTeamLimits = CustomNetTables.GetTableValue( "jungle_treasures_limit", DOTATeam_t.DOTA_TEAM_GOODGUYS.toString())
+    let direTeamLimits = CustomNetTables.GetTableValue( "jungle_treasures_limit", DOTATeam_t.DOTA_TEAM_BADGUYS.toString() )
+
+    if (radiantTeamLimits == null || radiantTeamLimits == null) {
+        return
+    }
+
+    let localPlayerID = Players.GetLocalPlayer()
+
+    //means spectators
+    if (localPlayerID == -1) {
+        let enemyPanel = $("#JungleCreepTreasuresValuesEnemy")
+        let enemyLabel = $("#JungleCreepTreasuresEnemyLabel")
+    
+        if (enemyPanel != null) {
+            enemyPanel.SetHasClass("Visible", true)
+        }
+    
+        if (enemyLabel != null) {
+            enemyLabel.SetHasClass("Visible", true)
+        }
+    }
+
+    let team = Players.GetTeam( localPlayerID)
+
+    let droppedRadiant = radiantTeamLimits["dropped"] || 0
+    let droppedDire =  direTeamLimits["dropped"] || 0
+
+    let limitRadiant =  direTeamLimits["limit"] || 0
+    let limitDire =  direTeamLimits["limit"] || 0
+
+    let droppedPanel = $("#JungleCreepTreasuresDroppedCount")
+    let limitPanel = $("#JungleCreepTreasuresLimitCount")
+
+    let droppedEnemyPanel = $("#JungleCreepTreasuresDroppedCountEnemy")
+    let limitEnemyPanel = $("#JungleCreepTreasuresLimitCountEnemy")
+
+    if (droppedPanel == null || limitPanel == null || droppedEnemyPanel == null || limitEnemyPanel == null) {
+        return
+    }
+
+    if (team == DOTATeam_t.DOTA_TEAM_GOODGUYS || localPlayerID == -1) {
+        droppedPanel.text = droppedRadiant
+        limitPanel.text = limitRadiant
+
+        droppedEnemyPanel.text = droppedDire
+        limitEnemyPanel.text = limitDire
+
+    } else {
+        droppedPanel.text = droppedDire
+        limitPanel.text = limitDire
+
+        droppedEnemyPanel.text = droppedRadiant
+        limitEnemyPanel.text = limitRadiant
+    }
+}
+
+function ShowTopRankMMR()
+{   
+    let mmrPanel = $("#TopRankMMRWrapper")
+
+    if (mmrPanel != null) {
+        mmrPanel.ToggleClass("Visible")
+    }
+
+    let mmrWrapper = $("#TopRankMMRPlayersWrapper")
+
+    if (mmrWrapper != null) {
+        mmrWrapper.RemoveAndDeleteChildren();
+
+        let mmrPlayers = CustomNetTables.GetTableValue( "top_mmr_players", "0" );
+        if (mmrPlayers == null || mmrPlayers == undefined) {
+            return;
+        }
+    
+        let mmrPlayersArray = Object.values(mmrPlayers)
+
+        for (let index = 0; index < mmrPlayersArray.length; index++) {
+            const playerData = mmrPlayersArray[index];
+
+            let steamID = playerData["steam_id"]
+            let mmr = playerData["ad_mmr"]
+
+            if (steamID == undefined || steamID == null || mmr == undefined || mmr == null || mmr == -1) {
+                continue;
+            }
+            
+            let playerRow = $.CreatePanel('Panel', mmrWrapper, "");
+            playerRow.BLoadLayoutSnippet("TopRankMMRPlayer")
+            playerRow.SetHasClass("TopRankMMRPlayer", true);
+
+            let position = playerRow.FindChildrenWithClassTraverse("TopRankMMRPlayerPosition")
+            if (position != undefined && position != null && position.length > 0) {
+                position[0].text = index + 1 + "."
+            }
+
+            let avatar = playerRow.FindChildrenWithClassTraverse("TopRankMMRPlayerAvatar")
+            if (avatar != undefined && avatar != null && avatar.length > 0) {
+                avatar[0].accountid = steamID
+            }
+
+            let playerName = playerRow.FindChildrenWithClassTraverse("TopRankMMRPlayerName")
+            if (playerName != undefined && playerName != null && playerName.length > 0) {
+                playerName[0].accountid = steamID
+            }
+
+            let playerMMR = playerRow.FindChildrenWithClassTraverse("TopRankMMRPlayerNumber")
+            if (playerMMR != undefined && playerMMR != null && playerMMR.length > 0) {
+                playerMMR[0].text = mmr
+            }
+        }
+    }
+}
+
+function ShowCustomAbilityActionBar()
+{
+    let rootContainer = null
+    let orgSecondaryBar = GetHUDPanelByID("TertiaryAbilitiesBar")
+
+    if (orgSecondaryBar != null) {
+        rootContainer = orgSecondaryBar.GetParent()
+    } else {
+        rootContainer = $.GetContextPanel()
+    }
+
+    let customAbilityBar = GetHUDPanelByID("CustomAbilityActionBar")
+    
+    // customAbilityBar.DeleteAsync(0)
+
+    if (customAbilityBar == null) {
+        customAbilityBar = $.CreatePanel( "Panel",  rootContainer, "CustomAbilityActionBar" );
+        customAbilityBar.BLoadLayout( "file://{resources}/layout/custom_game/custom_ability_action_bar.xml", false, false );
+    }
+
+    let buffContainer = GetHUDPanelByID("BuffContainer")
+    if (buffContainer != null) {
+        buffContainer.style["transform"] = "translateY(-32px)"
+    }
+}
+
+function CreateKeyBindPanels(parent)
+{
+    let keyBinds = $.CreatePanel('Panel', parent, '');
+    keyBinds.BLoadLayout( "file://{resources}/layout/custom_game/custom_key_binding_bar.xml", false, false );
+
+    return keyBinds
+}
+
+function CustomKeyBindingSettings()
+{
+    let keyBindsRoot = $("#PlayerCustomKeyBindRoot")
+    if (keyBindsRoot == null) {
+        return;
+    }
+    
+    if (keyBindsRoot.GetChildCount() == 0) {
+        CreateCustomKeyBindsInterface()
+        keyBindsRoot.SetHasClass("Visible", true)
+    } else {
+        keyBindsRoot.ToggleClass("Visible")
+    }
+
+    if (keyBindsRoot.BHasClass("Visible")) {
+        let keyBinds = keyBindsRoot.FindChildrenWithClassTraverse("CustomKeyBindWrapperRoot")
+        
+        if (keyBinds!= null && keyBinds[0] != null) {
+            keyBinds[0].Data().UpdateAbilitySlotsKeybind(true)
+        }
+    }
+}
+
+function CreateCustomKeyBindsInterface()
+{
+    let keyBindsRoot = $("#PlayerCustomKeyBindRoot")
+    if (keyBindsRoot == null) {
+        return;
+    }
+    
+    keyBindsRoot.RemoveAndDeleteChildren()
+    let keyBinds = CreateKeyBindPanels(keyBindsRoot)
+
+    if (keyBinds != null) {
+        keyBinds.Data().UpdateAbilitySlotsKeybind()
+    }
+}
+
+var CosmeticInventoryLoaded = false
+function OpenCosmeticInventory()
+{
+    let mainPanel = $("#CustomCosmeticInventoryRoot")
+
+    if (mainPanel == null) {
+        return
+    }
+
+    mainPanel.ToggleClass("Visible")
+
+    if (!mainPanel.BHasClass("Visible")) {
+        return
+    }
+
+    if (!CosmeticInventoryLoaded) {
+        mainPanel.BLoadLayout( "file://{resources}/layout/custom_game/custom_cosmetic_inventory.xml", false, false );
+        CosmeticInventoryLoaded = true
+    }
+}
+
+function ReconnectToRemoteServer()
+{
+    let localPlayer = Game.GetLocalPlayerID()
+    if (Players.IsValidPlayerID(localPlayer)) {
+        GameEvents.SendCustomGameEventToServer( "server_reconnect", {"player_id":localPlayer});
+    }
+}
+
+function UpdateTopBarScale()
+{
+    if (Players.GetMaxPlayers() > 18) {
+        let playersCount = 0
+
+        for (let index = 0; index < Players.GetMaxPlayers(); index++) {         
+            if (Players.IsValidPlayerID(index)) {
+                playersCount++;
+            }
+        }
+
+        if (playersCount > 18) {
+            let radiantTeamTopBar = GetHUDPanelByID("TopBarRadiantTeam")
+            if (radiantTeamTopBar != null) {
+                radiantTeamTopBar.style["ui-scale"] = "92%"
+            }
+
+            let direTeamTopBar = GetHUDPanelByID("TopBarDireTeam")
+            if (direTeamTopBar != null) {
+                direTeamTopBar.style["ui-scale"] = "92%"
+            }
+        }
+    }
+}
+
+(function()
+{
+    $.Schedule(0.5, function() {
+        CreateCustomKeyBindsInterface();
+        ShowCustomAbilityActionBar();
+        UpdateJungleCreepTreasures();
+
+        UpdateTopBarScale()
+    })
+
+})();
+

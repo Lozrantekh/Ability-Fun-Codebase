@@ -1,0 +1,555 @@
+/* Prettified by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io */
+
+.GameCompleteRoot
+{
+    width: 100%;
+    height: 100%;
+}
+
+#GameSummaryRoot
+{
+    width: 100%;
+    height: 100%;
+}
+
+#GameSummaryRoot.SummaryHidden
+{
+    opacity: 0;
+    visibility: collapse;
+}
+
+#GameSummaryRoot.ManyPlayers
+{
+    ui-scale:80%;
+}
+
+#GameSummaryContainer
+{
+    width: 1800px;
+    margin-top: 0px;
+    horizontal-align:center;
+    border:4px solid #c7c7c7;
+    background-color: gradient(linear, 0% 10%, 0% 100%, from(rgb(0, 0, 0)), to( rgba(0, 0, 0, 0.966)));
+    background-image: url("s2r://");
+    background-img-opacity: 0.03;
+    background-size: cover;
+    flow-children:down;
+    padding-bottom: 20px;
+}
+
+#GameSummaryRoot.ManyPlayers #GameSummaryContainer
+{
+    padding-bottom: 0;
+}
+
+#GameSummaryResultLabelWrapper
+{
+    width: 100%;
+    text-align: center;
+    flow-children:right;
+    background-color: gradient(linear, 0% 20%, 0% 100%, from(rgb(0, 0, 0)), to( rgba(0, 0, 0, 0.384)));
+}
+
+#GameSummaryResultLabelWrapper Label
+{
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    horizontal-align: middle;
+    vertical-align: top;
+    font-size: 30px;
+    pre-transform-scale2d: 1;
+    opacity: 1;
+    font-weight: black;
+    transform: rotateX(50deg) scaleY(1.8);
+    color: #000f0e;
+    text-shadow: 0px 0px 0px 2.0 #ffffff;
+    text-transform: uppercase;
+    padding: 5px 20px;
+    background-color: gradient(linear, 0% 70%, 0% 100%, from(rgb(219, 219, 219)), to( rgba(0, 0, 0, 0.616)));
+}
+
+#GameSummaryRoot.ManyPlayers #GameSummaryResultLabelWrapper Label
+{
+    visibility: collapse;
+}
+
+.SummaryPlayersWrapper
+{
+    width: 100%;
+    flow-children: down;
+    padding: 0 20px;
+    margin-bottom: 10px;
+}
+
+.SummaryPlayersWrapper.HidePanel
+{
+    visibility: collapse;
+    opacity: 0;
+}
+
+.SummaryPlayersWrapper.PatronPlayers
+{
+    margin-bottom: 10px;
+}
+
+.SummaryMainLabelWrapper
+{
+    width: 100%;
+    flow-children:right;
+}
+
+#PlayerScoreHeader
+{
+    width: 100%;
+    margin-left: 257px;
+    flow-children:right;
+}
+
+.GameSummaryHeader
+{
+    width: 185px;
+    text-align: center;
+    text-transform: uppercase;
+    vertical-align: center;
+}
+
+.GameSummaryHeader.VeryBig
+{
+    width: 300px;
+}
+
+.GameSummaryHeader.Bigger
+{
+    width: 225px;
+}
+
+.GameSummaryHeader.Medium
+{
+    width: 115px;
+}
+
+.GameSummaryHeader.Small
+{
+    width: 75px;
+}
+
+.GameSummaryHeader.Smaller
+{
+    width: 45px;
+}
+
+.LabelFirstLine,.LabelSecondLineEnd
+{
+    width: 50px;
+    padding-top: 12px;
+    border-bottom: 4px solid #c7c7c7;
+}
+
+.LabelSecondLine,.LabelFirstLineEnd
+{
+    width: 1500px;
+    padding-top: 12px;
+    border-bottom: 4px solid #c7c7c7;
+}
+
+#GameSummaryRoot.ManyPlayers .SummaryMainLabelWrapper
+{
+    visibility: collapse;
+}
+
+.PatronPlayers .LabelFirstLine,.PatronPlayers .LabelSecondLineEnd
+{
+    width: 60px;
+    padding-top: 12px;
+    border-bottom: 4px solid #ff0062;
+}
+
+.PatronPlayers .LabelSecondLine,.PatronPlayers .LabelFirstLineEnd
+{
+    width: 1300px;
+    padding-top: 12px;
+    border-bottom: 4px solid rgb(255, 0, 98);
+}
+
+.PatronsLabel
+{
+    width: 115px;
+    font-size: 23px;
+    margin-bottom: 10px;
+    color:#ff0062;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
+}
+
+.PlayersLabel
+{
+    width: 190px;
+    font-size: 23px;
+    margin-bottom: 10px;
+    color:#c7c7c7;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
+}
+
+#GameSummaryRoot.ManyPlayers .PlayersLabel
+{
+    margin-bottom: 0;
+    visibility: collapse;
+}
+
+#SummaryPlayersRowsRadiant .PlayersLabel
+{
+    color:#00d300;
+    text-shadow: 0px 0px 10px 3 #001f00;
+}
+
+#SummaryPlayersRowsDire .PlayersLabel
+{
+    color:#c70000;
+    text-shadow: 0px 0px 10px 3 #250000;
+}
+
+.SummaryPlayerRow
+{
+    width: 100%;
+    border-bottom:2px solid rgba(92, 92, 92, 0.507);
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    background-color: gradient(linear, 0% 20%, 0% 100%, from(rgba(104, 104, 104, 0.082)), to( rgba(0, 0, 0, 0.904)));
+    flow-children:right;
+}
+
+.PatronPlayers .SummaryPlayerRow
+{
+    width: 100%;
+    border-bottom:2px solid rgba(150, 0, 57, 0.5);
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    background-color: gradient(linear, 0% 20%, 0% 100%, from(rgba(92, 0, 35, 0.466)), to( rgba(0, 0, 0, 0.911)));
+    flow-children:right;
+}
+
+.PlayerInfoContainer
+{
+    flow-children:right;
+}
+
+.PlayerInfoContainer .PlayerHeroImage
+{
+    width: 75px;
+}
+
+.PlayerInfoContainer .PlayerNamesContainer
+{
+    vertical-align: center;
+    flow-children:down;
+    margin-left: 10px;
+}
+
+.PlayerInfoContainer .PlayerNamesContainer Label
+{
+    width: 155px;
+    height: 22px;
+}
+
+.PlayerNamesContainer .PlayerName
+{
+    color:rgb(255, 217, 0);
+}
+
+.PatronPlayers .PlayerNamesContainer .PlayerName
+{
+    font-weight: bold;
+}
+
+.PlayerNamesContainer .PatronLevelName
+{
+    color:rgb(0, 255, 221);
+    text-transform: uppercase;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.PlayerDataContainer
+{
+    width: 185px;
+    flow-children:down;
+    vertical-align: center;
+}
+
+.PlayerDataContainer.VeryBig
+{
+    width: 300px;
+}
+
+.PlayerDataContainer.Bigger
+{
+    width: 225px;
+}
+
+.PlayerDataContainer.Medium
+{
+    width: 115px;
+}
+
+.PlayerDataContainer.Small
+{
+    width: 75px;
+}
+
+.PlayerDataContainer.Smaller
+{
+    width: 45px;
+}
+
+.PlayerDataContainer Label
+{
+    text-align: center;
+    color:white;
+    font-size: 20px;
+    font-weight: bold;
+    horizontal-align:center;
+}
+
+Label.ScoreLabel
+{
+    padding: 2px 0;
+}
+
+.PlayerDataContainer Label.ScoreLabel.PatronExtraCoinsBonus,.PlayerDataContainer Label.ScoreLabel.PatronExtraRelicXPBonus
+{
+    width: 50%;
+    color:#ff2478;
+    border-bottom: 2px solid rgb(145, 0, 67);
+}
+
+.PlayerDataContainer Label.ScoreLabel.PatronTotalBonus
+{
+    margin-top: 2px;
+    padding-top: 2px;
+    margin-left: 5px;
+}
+
+.SummaryProgressBarWrapper
+{
+    color: white;
+    width: 90%;
+    height: 17px;
+    flow-children:right;
+    horizontal-align:center;
+}
+
+.SummarySceneProgressBar
+{
+    width: 100%;
+    height: 100%;
+    hue-rotation:290deg;
+}
+
+.SummaryProgressBar
+{
+    width: 65%;
+    height: 100%;
+    background-color: gradient( linear, 0% 0%, 0% 100%, from( #5e0046 ), to( #b8008a ) );
+    border: 2px solid #ff00bf;
+}
+
+.SummaryProgressBar.PatronProgressBarLevel1
+{
+    width: 11%;
+    background-color: gradient( linear, 0% 0%, 0% 100%, from( #ffa600 ), to( #ffd000 ) );
+    border:2px solid rgb(255, 234, 113);
+}
+
+.SummaryProgressBar.PatronProgressBarLevel2
+{
+    width: 21%;
+    background-color: gradient( linear, 0% 0%, 0% 100%, from( #ffa600 ), to( #ffd000 ) );
+    border:2px solid rgb(255, 234, 113);
+}
+
+.SummaryProgressBar.PatronProgressBarLevel3
+{
+    width: 33%;
+    background-color: gradient( linear, 0% 0%, 0% 100%, from( #ffa600 ), to( #ffd000 ) );
+    border:2px solid rgb(255, 234, 113);
+}
+
+.PlayerDataContainer Label.ScoreLabel
+{
+    margin-left: 0px;
+    text-align: center;
+}
+
+.PatronInfoWrapper
+{
+    width: 100%;
+    flow-children:right;
+    margin-left: 235px;
+}
+
+.PatronInfoButton
+{
+    width: 200px;
+    horizontal-align:right;
+}
+
+.PatronInfoButton Label
+{
+    width: 100%;
+    text-transform: uppercase;
+    color:#ff0062;
+    font-size: 18px;
+    text-align: right;
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.PatronInfoButton:hover Label
+{
+    color:white;
+}
+
+.PatronInfoWrapper .PatreonInfoDataContainer
+{
+    width: 185px;
+    flow-children:down;
+    vertical-align: center;
+    horizontal-align:center;
+    opacity: 0;
+    height: 0;
+    transition-property: height, opacity;
+    transition-duration: 0.5s;
+}
+
+.PatronInfoWrapper.PatreonInfoVisible .PatreonInfoDataContainer
+{
+    opacity: 1;
+    height: 90px;
+    padding: 10px 0;
+}
+
+.PatreonInfoDataContainer Label
+{
+    width: 100%;
+    color:white;
+    text-align: center;
+    horizontal-align:center;
+}
+
+.PatreonInfoDataContainer Label.PatreonLink
+{
+    width: 150px;
+    background-color: gradient(linear, 0% 10%, 0% 100%, from(#a70040), to( #360015));
+    text-align: center;
+    border-radius: 5px;
+    border: 1px solid pink;
+    font-size: 16px;
+    padding: 10px 0;
+    vertical-align: center;
+}
+
+.PatreonInfoDataContainer Label.PatreonLink:hover
+{
+    background-color: gradient(linear, 0% 10%, 0% 100%, from(#ff0062), to( #360015));
+}
+
+.SummaryHeroPortrait
+{
+    width: 120px;
+    height: 135px;
+}
+
+.SummaryDamageTakenWrapper
+{
+    width: 100%;
+}
+
+.ScoreLabel.PatronPhysicalDamage,.ScoreLabel.PatronPhysicalDamageTaken
+{
+    color:#ff0000;
+}
+
+.ScoreLabel.PatronMagicalDamage,.ScoreLabel.PatronMagicalDamageTaken
+{
+    color:#00a2ff;
+}
+
+.ScoreLabel.PatronPureDamage,.ScoreLabel.PatronPureDamageTaken
+{
+    color:#ffd900;
+    border-bottom: 1px solid white;
+}
+
+.SummaryCircleValue
+{
+    width: 35px;
+    height: 25px;
+    border:2px solid #a80041;
+    border-radius: 30%;
+    horizontal-align:left;
+    margin-top: 2px;
+}
+
+.SummaryCircleValue Label
+{
+    font-size: 12px;
+    text-align: center;
+    vertical-align: center;
+    horizontal-align:center;
+}
+
+.SummaryCircleValue.ValueHidden
+{
+    opacity: 0;
+}
+
+.PlayerSelectedAbilities,.PlayerItems,.PlayerNeutralItemWrapper
+{
+    flow-children:right;
+    horizontal-align:center;
+}
+
+.PlayerSelectedAbility,.PlayerItem,.PlayerNeutralItem
+{
+    width: 32px;
+    margin-right: 5px;
+    border: 1px solid rgb(94, 94, 94);
+    vertical-align: center;
+    horizontal-align:center;
+}
+
+.PlayerNeutralItem
+{
+    border-radius: 30%;
+}
+
+.PlayerDataContainer Label.ScoreLabel.OpenedGoldenTreasures
+{
+    color:gold;
+}
+
+.PlayerBaseTreeTalent
+{
+    width: 30px;
+    height: 30px;
+}
+
+.PlayerSummaryTreeTalent
+{
+    width: 30px;
+    horizontal-align:center;
+}
+
+#ShowSummaryButton
+{
+    border:2px solid rgb(255, 255, 255);
+    wash-color:#e1dd0e;
+    horizontal-align:center;
+    vertical-align: bottom;
+    margin-bottom: 110px;
+}
+

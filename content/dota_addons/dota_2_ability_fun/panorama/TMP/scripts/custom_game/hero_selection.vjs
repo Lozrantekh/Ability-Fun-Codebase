@@ -1,0 +1,2595 @@
+"use strict";
+
+var ABILITY_PICK_MAX = 4;
+var ABILITY_BASE_MAX = 3;
+var ABILITY_ULTIMATE_MAX = 1;
+var BASE_PICK_TIME = 10
+
+var PICK_SOUND_EMITED_ON_PLAYER_ID = -1
+var DRAFT_NOW_EMITED = false
+var LAST_COUNT_EMITED = 0
+
+var BAN_START_SOUND_EMITED = false
+
+var ABILITY_AGHANIM_CHECKS = {}
+
+var AbilityTooltipPanelID = "DOTAAbilityTooltip";
+
+var CURRENT_SELECTION_PHASE = 0;
+
+var MANY_PLAYERS_GAME = false
+
+var multiCastBoost1x = 1.15
+var multiCastBoost2x = 1.3
+var multiCastBoost3x = 1.5
+
+CustomNetTables.SubscribeNetTableListener( "players_hero_picks", UpdatePotentialHeroPicks);
+CustomNetTables.SubscribeNetTableListener( "players_hero_options", StartHeroSelection );
+CustomNetTables.SubscribeNetTableListener( "selection_info", ManageHeroAndAbilitySelection);
+CustomNetTables.SubscribeNetTableListener( "ability_options", UpdateAvailableAbilities);
+CustomNetTables.SubscribeNetTableListener( "talent_options", UpdateAvailableTalents);
+CustomNetTables.SubscribeNetTableListener( "ability_pick_order", UpdateAbilityPickOrder);
+CustomNetTables.SubscribeNetTableListener( "players_ability_picks", UpdateAbilityInventoryPanels);
+CustomNetTables.SubscribeNetTableListener( "players_talent_picks", UpdatePlayersTalentPicks);
+CustomNetTables.SubscribeNetTableListener( "players_info", UpdatePlayersInfo);
+
+function BlockPickHeroScreen()
+{
+    //This function is only to prevent click on the original hero selection board that is under the hero selection
+    // $.Msg("click original hero selection!")
+}
+
+// function UpdatePanelsWithHeroPicks()
+// {
+//     UpdatePotentialHeroPicks();
+//     UpdatePlayersPickingPanels();
+// }
+
+function SelectHero(heroOption)
+{
+    let heroName = $("#Hero_Name_" + heroOption.slice(-1))
+    if (heroName == null || heroName.text == "")
+    {
+        return;
+    }
+
+    let heroPortait = $("#Hero_Portrait_" + heroOption.slice(-1))
+
+    if (heroPortait != null && !heroPortait.BHasClass("Selected")) {
+        Game.EmitSound(heroPortait.GetParent().GetAttributeString("pick_sound", ""));
+    }
+
+    let heroNameLabels = $.GetContextPanel().FindChildrenWithClassTraverse("HeroPickNameLabel")
+
+    if (heroNameLabels) {
+        for (let index = 0; index < heroNameLabels.length; index++) {
+            const element = heroNameLabels[index];
+            
+            if (element.id == "Hero_Name_" + heroOption.slice(-1)) {
+                element.SetHasClass("Hidden", true)
+            } else {
+                element.SetHasClass("Hidden", false)
+            }
+        }
+    } 
+    
+    AddStylesToSelectedHeroOption(heroOption)
+
+    let playerID = Players.GetLocalPlayer()
+    GameEvents.SendCustomGameEventToServer( "hero_selected", { player_id : playerID, hero_option : heroOption} );
+
+    let confirmButtons = $.GetContextPanel().FindChildrenWithClassTraverse("HeroConfirmButton")
+
+    if (confirmButtons != null && confirmButtons != undefined && confirmButtons.length > 0) {
+        for (let index = 0; index < confirmButtons.length; index++) {
+            const element = confirmButtons[index];
+
+            element.SetHasClass("Visible", false)
+
+            if (element.id == "ConfirmHero_" + heroOption.slice(-1)) {
+                element.SetHasClass("Visible", true)
+            }
+            
+        }
+    }
+}
+
+var g_lastGestureStartTime = 0.0;
+var g_bPlayingTaunt = false;
+var g_removePlayingTaunt = null
+
+function DoTauntAnimation(scenePanel) {
+    if (g_bPlayingTaunt) return;
+
+    g_bPlayingTaunt = true;
+
+    let gesture = "ACT_DOTA_SPAWN"
+    let heroName = scenePanel.GetAttributeString("hero_name", "")
+
+    let heroesCastAbilityAnimation = [
+        "npc_dota_hero_warlock",
+        "npc_dota_hero_weaver",
+        "npc_dota_hero_faceless_void",
+        "npc_dota_hero_dawnbreaker",
+        "npc_dota_hero_spectre",
+        "npc_dota_hero_void_spirit",
+        "npc_dota_hero_lina",
+        "npc_dota_hero_sand_king",
+        "npc_dota_hero_magnataur",
+        "npc_dota_hero_sniper",
+        "npc_dota_hero_luna",
+        "npc_dota_hero_terrorblade",
+        "npc_dota_hero_medusa",
+        "npc_dota_hero_abyssal_underlord"
+    ];
+
+    if (heroesCastAbilityAnimation.includes(heroName)){
+        gesture = "ACT_DOTA_CAST_ABILITY_4"
+    }
+
+    let heroesCustomAnimation = {
+        "npc_dota_hero_dawnbreaker" : "ACT_DOTA_ATTACK",
+        "npc_dota_hero_medusa" : "ACT_DOTA_CAST_ABILITY_2"
+    }
+
+    let activityModifiers = {
+        "npc_dota_hero_dawnbreaker" : "versus_screen",
+    }
+
+    if (heroesCustomAnimation[heroName] != null){
+        gesture = heroesCustomAnimation[heroName]
+    }
+
+    if (activityModifiers[heroName] != null) {
+        $.DispatchEvent("DOTASceneFireEntityInput", scenePanel, "hero", "SetActivityModifier", activityModifiers[heroName]);    
+    } else {
+        $.DispatchEvent("DOTASceneFireEntityInput", scenePanel, "hero", "SetActivityModifier", "");    
+    }
+
+    $.DispatchEvent("DOTASceneFireEntityInput", scenePanel, "hero", "StartGestureOverride", gesture);
+
+    scenePanel.SetAttributeInt("taunt_playing", 1)
+
+    g_removePlayingTaunt = $.Schedule(2.0, function () {
+        g_bPlayingTaunt = false;
+        g_removePlayingTaunt = null;
+        scenePanel.SetAttributeInt("taunt_playing", 0)
+    });
+}
+
+var LastSelectedHeroOption = -1
+function AddStylesToSelectedHeroOption(heroOption)
+{
+    if (heroOption == null || heroOption == undefined) {
+        return
+    }
+
+    let selectedHeroPanel = null;
+
+    if (heroOption == "") {
+        selectedHeroPanel = $("#HeroPickList")
+    } else {
+
+        selectedHeroPanel = $( "#" + heroOption)
+    }
+
+    if (selectedHeroPanel == null)
+    {
+        return;
+    }
+
+    let parent = selectedHeroPanel.GetParent()
+
+    if (heroOption == "") {
+        parent = selectedHeroPanel
+    }
+
+    if (parent == null)
+    {
+        return;
+    }
+
+    let allPortraits = parent.FindChildrenWithClassTraverse("HeroPickOptionPortrait")
+    if (allPortraits != null )
+    {
+        for (let index = 0; index < allPortraits.length; index++) {
+            const element = allPortraits[index];
+    
+            element.SetHasClass("Selected", false)
+    
+            if (element.GetParent().id == heroOption) {
+                element.SetHasClass("Selected", true);
+
+                if (LastSelectedHeroOption != heroOption ) {
+                    if (g_removePlayingTaunt !== null) {
+                        $.CancelScheduled(g_removePlayingTaunt)
+                        g_removePlayingTaunt = null
+                        g_bPlayingTaunt = false
+                    }
+
+                    DoTauntAnimation(element)
+                    LastSelectedHeroOption = heroOption
+                }
+
+            } else {
+                if (element.GetAttributeInt("taunt_playing", 0) == 1) {
+                    element.FireEntityInput("hero", "StartGestureOverride", "ACT_DOTA_LOADOUT")
+                    element.SetAttributeInt("taunt_playing", 0)
+                }
+            }
+        }
+    }
+
+    let allBrushNames = parent.FindChildrenWithClassTraverse("HeroPickNameWrapper")
+
+    if (allBrushNames != null && allBrushNames != undefined)
+    {
+        for (let index = 0; index < allBrushNames.length; index++) {
+            const element = allBrushNames[index];
+    
+            if (element.GetParent().id == heroOption) {
+                element.SetHasClass("Selected", true);
+            } else {
+                element.SetHasClass("Selected", false);
+            }
+        }
+    }
+
+    let allEffects = parent.FindChildrenWithClassTraverse("HeroSelectEffect")
+    if (allEffects != null && allEffects != undefined)
+    {
+        for (let index = 0; index < allEffects.length; index++) {
+            const element = allEffects[index];
+    
+            if (element.GetParent().id == heroOption) {
+                element.SetHasClass("Visible", true);
+            } else {
+                element.SetHasClass("Visible", false);
+            }
+        }
+    }
+}
+
+function ConfirmSelectedHero()
+{
+    BlockHeroSelecting();
+
+    let playerID = Players.GetLocalPlayer()
+
+    if (Players.IsValidPlayerID(playerID)) {
+        GameEvents.SendCustomGameEventToServer( "hero_pick_confirm", 
+                                                { 
+                                                    player_id : playerID, 
+                                                } 
+        );
+    }
+
+    let confirmButtons =  $.GetContextPanel().FindChildrenWithClassTraverse("HeroConfirmButton")
+
+    if (confirmButtons != null && confirmButtons != undefined && confirmButtons.length > 0) {
+        for (let index = 0; index < confirmButtons.length; index++) {
+            const element = confirmButtons[index];
+
+            element.SetHasClass("Visible", false)                
+        }
+    }
+
+    let heroNameLabels = $.GetContextPanel().FindChildrenWithClassTraverse("HeroPickNameLabel")
+
+    if (heroNameLabels) {
+        for (let index = 0; index < heroNameLabels.length; index++) {
+            const element = heroNameLabels[index];
+            element.SetHasClass("Hidden", false)
+        }
+    } 
+
+    Game.EmitSound("Hero.Select.Confirm")
+}
+
+var HeroFirstLoad = true
+
+function StartHeroSelection()
+{
+    let heroSelectionWrapper = $( "#HeroPickList");
+
+    if (typeof(heroSelectionWrapper) === "null" || typeof(heroSelectionWrapper) === "undefined")
+    {
+        return;
+    }
+
+    let playerHeroes = CustomNetTables.GetTableValue( "players_hero_options", Players.GetLocalPlayer().toString() );
+    if (typeof(playerHeroes) == "null" || typeof(playerHeroes) == "undefined" ) {
+        return
+    }
+
+    // $.Msg(playerHeroes)
+
+    let pickedHeroID = -1;
+    let heroPickData = CustomNetTables.GetTableValue( "players_hero_picks", Players.GetLocalPlayer().toString() );
+
+    if (heroPickData != null ){
+        if (typeof(heroPickData["hero_id"]) !== "undefined") {
+            pickedHeroID = heroPickData["hero_id"]
+        }
+    }
+
+    let anyHeroChanged = false
+
+    for (let index = 0; index <= 3; index++) {
+        const heroData = playerHeroes[index];
+
+        if (typeof(heroData["hero_id"]) === "undefined" || typeof(heroData["main_attr"]) === "undefined") {
+            continue;
+        }
+
+        let heroID = heroData["hero_id"]
+        let heroMainAttrID = heroData["main_attr"]
+        let heroName = heroData["hero_name"] || "";
+        let pickSound = heroData["pick_sound"] || "";
+
+        let heroOptionPanel = heroSelectionWrapper.FindChildTraverse("Hero_" + heroMainAttrID)
+
+
+        if (heroOptionPanel != null) {
+            if (heroOptionPanel.GetAttributeString("hero_id", "") == heroID) {
+                continue;
+            }
+
+            heroOptionPanel.SetAttributeString("pick_sound", pickSound)
+            heroOptionPanel.SetAttributeString("hero_id", heroID)
+            
+            let heroOptionPortrait = heroOptionPanel.FindChildTraverse("Hero_Portrait_" + heroMainAttrID)
+            if (heroOptionPortrait != null) {
+                if (pickedHeroID == -1 || pickedHeroID != heroID || HeroFirstLoad) {
+                    heroOptionPortrait.style["opacity"] = 0
+                    anyHeroChanged = true
+
+                    $.Schedule(0.1, function(){
+                        heroOptionPortrait.SetScenePanelToLocalHero(heroID)   
+                    })
+                    
+                    let lowerPortraitPos = false
+
+                    if (heroName == "npc_dota_hero_weaver" || heroName == "npc_dota_hero_broodmother" || heroName == "npc_dota_hero_nyx_assassin") {
+                        lowerPortraitPos = true
+                    }
+
+                    heroOptionPortrait.SetHasClass("LowerPortraitPosition", lowerPortraitPos)
+                    heroOptionPortrait.SetAttributeString("hero_name", heroName)
+                }
+
+                if (pickedHeroID == heroID) {
+                    AddStylesToSelectedHeroOption("Hero_" + heroMainAttrID)
+                }
+            }
+
+            let heroOptionName = heroOptionPanel.FindChildTraverse("Hero_Name_" + heroMainAttrID)
+            if (heroOptionName != null) {
+                heroOptionName.text = $.Localize( "#" + heroName );
+
+                heroOptionName.SetAttributeString("hero_id", heroID)
+            }
+
+            let heroTreeTalent = heroOptionPanel.FindChildTraverse("HeroBaseTreeTalents_" + heroMainAttrID)
+            if (heroTreeTalent != null) {
+                heroTreeTalent.SetAttributeString("hero_id", heroID)
+            }
+        }
+    }
+
+    if (anyHeroChanged) {
+        $.Schedule(0.25, function() {
+            let heroPortraits = heroSelectionWrapper.FindChildrenWithClassTraverse("HeroPickOptionPortrait")
+            if (heroPortraits != null) {
+                for (let index = 0; index < heroPortraits.length; index++) {
+                    heroPortraits[index].style["opacity"] = 1
+                }
+            }
+    
+        })
+    }
+
+    HeroFirstLoad = false
+}
+
+function BlockHeroSelecting()
+{
+    let heroSelectionWrapper = $( "#HeroPickList")
+
+    if (typeof(heroSelectionWrapper) === "null" || typeof(heroSelectionWrapper) === "undefined")
+    {
+        return;
+    }
+
+    let heroPickOptions = heroSelectionWrapper.FindChildrenWithClassTraverse("HeroPickOption")
+
+    if (heroPickOptions !== null && heroPickOptions.length > 0) {
+        for (let index = 0; index < heroPickOptions.length; index++) {
+            const element = heroPickOptions[index];
+            element.hittest = false
+            element.ClearPanelEvent("onactivate")
+        }
+    }
+}
+
+var ClearScepterShardInfoScheduler = null
+var ShowScepterShardInfoScheduler = null
+
+//currently not used
+//this is other way to show scepter/shard upgrades for abilites (in the left bottom panel)
+function ShowScepterShardInfo(mainAbility, abilityShard, abilityScepter)
+{
+
+    if (ClearScepterShardInfoScheduler !== null) {
+        $.CancelScheduled(ClearScepterShardInfoScheduler);
+        ClearScepterShardInfoScheduler = null
+    }
+
+    if (ShowScepterShardInfoScheduler !== null) {
+        $.CancelScheduled(ShowScepterShardInfoScheduler);
+        ShowScepterShardInfoScheduler = null
+    }
+
+    let wrapperPanel = $("#AbilityScepterShardUpgrades")
+    let shardPanel = $("#AbilityShardUpgrade")
+    let scepterPanel = $("#AbilityScepterUpgrade")
+
+    if (shardPanel == null || scepterPanel == null) {
+        return;
+    }
+
+    if (mainAbility == "" && abilityShard == "" && abilityScepter == "") {
+
+        ClearScepterShardInfoScheduler = $.Schedule(0.1, function(){
+            wrapperPanel.SetHasClass("UpgradeAvailable", false)
+            shardPanel.SetHasClass("UpgradeAvailable", false)
+            scepterPanel.SetHasClass("UpgradeAvailable", false)
+
+            ClearScepterShardInfoScheduler = null
+        })
+
+        return;
+    }
+
+    ShowScepterShardInfoScheduler = $.Schedule(0.1, function(){
+        let shardPostTooltip = "_shard_description"
+        let shardNewAbility = ""
+        if (mainAbility !== abilityShard) {
+            shardPostTooltip = "_description"
+            shardNewAbility = abilityShard
+        }
+    
+        let scepterPostTooltip = "_scepter_description"
+        let scepterNewAbility = ""
+        if (mainAbility !== abilityScepter) {
+            scepterPostTooltip = "_description"
+            scepterNewAbility = abilityScepter
+        }
+    
+        let shardTooltip = "#DOTA_Tooltip_ability_" + abilityShard + shardPostTooltip
+        let scepterTooltip = "#DOTA_Tooltip_ability_" + abilityScepter + scepterPostTooltip
+    
+        let shardDescription = $.Localize(shardTooltip);
+        let scepterDescription = $.Localize(scepterTooltip);
+    
+        if (shardDescription !== shardTooltip) {
+            shardPanel.SetHasClass("UpgradeAvailable", true)
+            shardPanel.FindChildTraverse("AbilityShardUpgradeImage").SetHasClass("UpgradeAvailable", true)
+            shardPanel.FindChildTraverse("AbilityShardUpgradeLabel").text = GameUI.ReplaceDOTAAbilitySpecialValues(abilityShard, shardDescription)
+    
+            if (shardNewAbility !== "") {
+                let newAbilityWrapper = shardPanel.FindChildTraverse("AbilityShardUpgradeExtraAbility")
+                if (newAbilityWrapper !== null) {
+                    newAbilityWrapper.SetHasClass("UpgradeAvailable", true)
+                }
+    
+                let newAbility = newAbilityWrapper.FindChildTraverse("AbilityShardExtraAbilityImg")
+                if (newAbility !== null) {
+                    newAbility.abilityname = shardNewAbility
+                }
+    
+                let newAbilityLabel = newAbilityWrapper.FindChildTraverse("AbilityShardExtraAbilityLabel")
+                if (newAbilityLabel !== null) {
+                    newAbilityLabel.text = $.Localize( "#DOTA_Tooltip_ability_" + shardNewAbility )
+                }
+            } else {
+                let newAbilityWrapper = shardPanel.FindChildTraverse("AbilityShardUpgradeExtraAbility")
+                if (newAbilityWrapper !== null) {
+                    newAbilityWrapper.SetHasClass("UpgradeAvailable", false)
+                }
+            }
+    
+        } else {
+            shardPanel.SetHasClass("UpgradeAvailable", false)
+            shardPanel.FindChildTraverse("AbilityShardUpgradeImage").SetHasClass("UpgradeAvailable", false)
+    
+            let newAbilityWrapper = shardPanel.FindChildTraverse("AbilityShardUpgradeExtraAbility")
+            if (newAbilityWrapper !== null) {
+                newAbilityWrapper.SetHasClass("UpgradeAvailable", false)
+            }
+        }
+    
+        if (scepterDescription !== scepterTooltip) {
+            scepterPanel.SetHasClass("UpgradeAvailable", true)
+            scepterPanel.FindChildTraverse("AbilityScepterUpgradeImage").SetHasClass("UpgradeAvailable", true)
+            scepterPanel.FindChildTraverse("AbilityScepterUpgradeLabel").text = GameUI.ReplaceDOTAAbilitySpecialValues(abilityScepter, scepterDescription)
+    
+            if (scepterNewAbility !== "") {
+                let newAbilityWrapper = scepterPanel.FindChildTraverse("AbilityScepterUpgradeExtraAbility")
+                if (newAbilityWrapper !== null) {
+                    newAbilityWrapper.SetHasClass("UpgradeAvailable", true)
+                }
+    
+                let newAbility = newAbilityWrapper.FindChildTraverse("AbilityScepterExtraAbilityImg")
+                if (newAbility !== null) {
+                    newAbility.abilityname = scepterNewAbility
+                }
+    
+                let newAbilityLabel = newAbilityWrapper.FindChildTraverse("AbilityScepterExtraAbilityLabel")
+                if (newAbilityLabel !== null) {
+                    newAbilityLabel.text = $.Localize( "#DOTA_Tooltip_ability_" + scepterNewAbility )
+                }
+            } else {
+                let newAbilityWrapper = scepterPanel.FindChildTraverse("AbilityScepterUpgradeExtraAbility")
+                if (newAbilityWrapper !== null) {
+                    newAbilityWrapper.SetHasClass("UpgradeAvailable", false)
+                }
+            }
+        } else {
+            scepterPanel.SetHasClass("UpgradeAvailable", false)
+            scepterPanel.FindChildTraverse("AbilityScepterUpgradeImage").SetHasClass("UpgradeAvailable", false)
+    
+            let newAbilityWrapper = scepterPanel.FindChildTraverse("AbilityScepterUpgradeExtraAbility")
+            if (newAbilityWrapper !== null) {
+                newAbilityWrapper.SetHasClass("UpgradeAvailable", false)
+            }
+        } 
+
+        ShowScepterShardInfoScheduler = null;
+    })
+}
+
+function UpdateAvailableAbilities()
+{
+    if (Game.GameStateIsAfter( DOTA_GameState.DOTA_GAMERULES_STATE_HERO_SELECTION)) {
+        return;
+    }
+
+    let abilityOptions = CustomNetTables.GetTableValue( "ability_options", "0" );
+    if (abilityOptions == null || abilityOptions == undefined) {
+        return;
+    }
+
+    let ultimateOptions = abilityOptions["ultimate"]
+    let baseOptions = abilityOptions["base"]
+    let jungleOptions = abilityOptions["jungle"]
+
+    if (ultimateOptions !== undefined) {
+        let ultimateList = Object.values(ultimateOptions)
+        LoadAbilityList("ultimate", ultimateList);
+    }
+
+    if (baseOptions !== undefined) {
+        let baseList = Object.values(baseOptions)
+        LoadAbilityList("base", baseList);
+    }
+
+    if (jungleOptions !== undefined) {
+        let jungleList = Object.values(jungleOptions)
+        LoadAbilityList("jungle", jungleList);
+
+    }
+}
+
+function UpdatePlayersTalentPicks()
+{
+    let talentData = CustomNetTables.GetTableValue( "players_talent_picks", Players.GetLocalPlayer().toString());
+
+    if (talentData == null || talentData == undefined) {
+        return;
+    }
+
+    let talentsWrapper = $("#AbilityTalentsWrapper")
+    if (talentsWrapper == null) {
+        return;
+    }
+
+    let talentLevels = ["level_1", "level_2", "level_3", "level_4"]
+
+    let talentCounter = 1
+    for (let index = 0; index < talentLevels.length; index++) {
+        const talentLevel = talentLevels[index];
+
+        if (talentData[talentLevel] !== undefined && talentData[talentLevel] !== null) {
+            let talents = Object.values(talentData[talentLevel]);
+
+            let talentRight = talents[0] || "";
+            let talentLeft = talents[1] || "";
+
+            let talentRightLabel = talentsWrapper.FindChildTraverse("PlayerChosenTalent" + Number(talentCounter))
+            let talentLeftLabel = talentsWrapper.FindChildTraverse("PlayerChosenTalent" + Number(talentCounter + 1))
+
+            if (talentRightLabel != null) {
+                if (typeof(talentRight) == "string" && talentRight != "" ) {
+                    GameUI.SetupDOTATalentNameLabel(talentRightLabel, talentRight);
+                } else {
+                    talentRightLabel.text = ""
+                }
+            }
+
+            if (talentLeftLabel != null) {
+                if (typeof(talentLeft) == "string" && talentLeft != "") {
+                    GameUI.SetupDOTATalentNameLabel(talentLeftLabel, talentLeft);
+                } else {
+                    talentLeftLabel.text = ""
+                }
+            }
+        }
+
+        talentCounter += 2;
+    }
+}
+
+function UpdateAvailableTalents()
+{
+    let talentOptions = CustomNetTables.GetTableValue( "talent_options", Players.GetLocalPlayer().toString());
+
+    if (talentOptions == null || talentOptions == undefined) {
+        return;
+    }
+
+    let mainPanel = $("#AbilityPickingCenterPanel")
+    let talentsWrapperLevel1 = mainPanel.FindChildTraverse("AbilityTalentsLevel1")
+    let talentsWrapperLevel2 = mainPanel.FindChildTraverse("AbilityTalentsLevel2")
+    let talentsWrapperLevel3 = mainPanel.FindChildTraverse("AbilityTalentsLevel3")
+    let talentsWrapperLevel4 = mainPanel.FindChildTraverse("AbilityTalentsLevel4")
+
+    if (talentOptions["level_1"] !== undefined && talentOptions["level_1"] !== null) {
+        let talents = Object.values(talentOptions["level_1"]);
+
+        LoadTalentList(talentsWrapperLevel1, talents, "level_1")
+    }
+
+    if (talentOptions["level_2"] !== undefined && talentOptions["level_2"] !== null) {
+        let talents = Object.values(talentOptions["level_2"]);
+
+        LoadTalentList(talentsWrapperLevel2, talents, "level_2")
+    }
+
+    if (talentOptions["level_3"] !== undefined && talentOptions["level_3"] !== null) {
+        let talents = Object.values(talentOptions["level_3"]);
+
+        LoadTalentList(talentsWrapperLevel3, talents, "level_3")
+    }
+
+    if (talentOptions["level_4"] !== undefined && talentOptions["level_4"] !== null) {
+        let talents = Object.values(talentOptions["level_4"]);
+
+        LoadTalentList(talentsWrapperLevel4, talents, "level_4")
+    }
+}
+
+function LoadTalentList(talentWrapper, talentListData, talentLevel)
+{
+    let talentsPickedCount = 0
+    talentWrapper.RemoveAndDeleteChildren()
+    
+    for (let index = 0; index < talentListData.length; index++) {
+        const talentData = talentListData[index];
+
+        let talentName = talentData["talent_name"] || "";
+        let abilityNames = talentData["ability_names"] || {};
+        let abilityName = abilityNames[1] || "";
+        let customIcon = talentData["custom_icon"]
+
+        let isPicked = talentData["picked"] || false;
+
+        let abilityImage = $.CreatePanel("DOTAAbilityImage", talentWrapper, talentName);
+
+        if (customIcon != null) {
+            abilityImage.SetImage(customIcon)
+            abilityImage.SetAttributeString("custom_icon", customIcon)   
+        }
+
+        if (talentName == "special_bonus_unique_viper_5")
+        {
+            abilityImage.SetImage("s2r://panorama/images/primary_attribute_icons/primary_attribute_icon_all_psd.vtex")
+            abilityImage.SetAttributeString("custom_icon", "s2r://panorama/images/primary_attribute_icons/primary_attribute_icon_all_psd.vtex")  
+            abilityImage.style["ui-scale"] = "75%"
+        }
+
+        if (abilityImage == null) {
+            continue;
+        }
+
+        abilityImage.abilityname = abilityName
+        abilityImage.SetHasClass("AbilityTalentImage", true)
+
+        abilityImage.SetPanelEvent("onmouseout", function () {
+            $.DispatchEvent("UIHideTextTooltip");
+        });
+
+        abilityImage.SetDraggable(true)
+
+        abilityImage.SetAttributeString("talent_level", talentLevel)
+
+        if (isPicked) {
+            abilityImage.SetHasClass("TalentPicked", true)
+            abilityImage.SetDraggable(false)
+            talentsPickedCount++;
+        }
+
+        let label = $.CreatePanel("Label", talentWrapper, "");
+
+        label.SetHasClass("AbilityTalentTextHolder", true)
+
+        let talentText = GameUI.SetupDOTATalentNameLabel(label, talentName);
+
+        abilityImage.SetPanelEvent("onmouseover", function () {
+            $.DispatchEvent("UIShowTextTooltip", abilityImage, talentText);
+        });
+    }
+}
+
+
+function LoadAbilityList(abilityType, abilityList)
+{
+    let mainPanel = $("#AbilityPickingCenterPanel")
+    let abilityWrapper = mainPanel.FindChildTraverse("AbilityOptionsBase")
+
+    if (abilityType == "ultimate") {
+        abilityWrapper = mainPanel.FindChildTraverse("AbilityOptionsUltimate")
+    } else if (abilityType == "jungle") {
+        abilityWrapper = mainPanel.FindChildTraverse("AbilityOptionsJungle")
+    }
+
+    if (abilityWrapper !== null && abilityList !== undefined) {        
+
+        for (let index = 0; index < abilityList.length; index++) {
+            const abilityInfo = abilityList[index]
+            const abilityName = abilityInfo["ability_name"];
+            const isAbilityAvailable = abilityInfo["available"];
+            const isAbilityBanVoted = abilityInfo["ban_voted"];
+            const isAbilityBanned = abilityInfo["banned"]
+
+            let multicast = abilityInfo["multicast"] || 0;
+
+            let specialUpgrade = abilityInfo["special_upgrade"] || 0;
+
+            let abilityPanel = $("#" + abilityName)
+
+            if (abilityPanel == null) {
+                abilityPanel = $.CreatePanel("Panel", abilityWrapper, abilityName);
+
+                abilityPanel.SetHasClass("AbilityOptionPickWrapper", true)
+
+                AddAghanimsIconToAbility(abilityName, abilityPanel)
+
+                if (isAbilityAvailable == 1) {
+                    abilityPanel.SetHasClass("AbilityPicked", false)
+                    abilityPanel.SetPanelEvent("onactivate", function(){
+                        PickAbility(abilityType, abilityName);
+                    })
+
+                    abilityPanel.SetPanelEvent("onmouseover", function () {
+                        $.DispatchEvent("DOTAShowAbilityTooltip", abilityImage, abilityName);
+                    });
+            
+                    abilityPanel.SetPanelEvent("onmouseout", function () {
+                        $.DispatchEvent("DOTAHideAbilityTooltip");
+                    });
+
+                } else {
+                    abilityPanel.SetHasClass("AbilityPicked", true)
+                    abilityPanel.ClearPanelEvent("onactivate")
+                    abilityPanel.ClearPanelEvent("onmouseover")
+                }
+
+                let abilityImage = $.CreatePanel("DOTAAbilityImage", abilityPanel, "");
+
+                abilityImage.abilityname = abilityName
+                abilityImage.SetHasClass("AbilityOptionPick", true)
+
+                //show special upgrade info
+                if (specialUpgrade == 1) {
+                    let particleScene = $.CreatePanel("DOTAParticleScenePanel", abilityPanel, "", {
+                        hittest : false,
+                        particleName : "particles/ui/hud/spell_boost_x2",
+                        particleonly : true,
+                        cameraOrigin : "0 0 60",
+                        fov : 70,
+                        class :"AbilityOgreMagiSpellBoostParticle",
+                    });
+    
+                    if (particleScene != null) {
+                        particleScene.SetHasClass("AbilityOgreMagiSpellBoostParticle", true)
+    
+                    }
+                }
+
+            } else {
+                if (isAbilityAvailable == 0) {
+                    abilityPanel.SetHasClass("AbilityPicked", true)
+                    abilityPanel.ClearPanelEvent("onactivate")
+                    abilityPanel.ClearPanelEvent("onmouseover")
+                }
+
+                if (isAbilityBanVoted == 1) {
+                    abilityPanel.SetHasClass("AbilityBanVoted", true)
+                } else {
+                    abilityPanel.SetHasClass("AbilityBanVoted", false)
+                }
+
+                if (isAbilityBanned == 1) {
+                    abilityPanel.SetHasClass("AbilityBanned", true)
+
+                    if (abilityPanel.FindChildTraverse("AbilityBannedOverlay") == null) {
+                        $.CreatePanel("Panel", abilityPanel, "AbilityBannedOverlay")
+                    }
+                }
+
+                AddAghanimsIconToAbility(abilityName, abilityPanel)
+                    
+                //show ogre multicast boosts
+                //removed from game - instead of added Golden treasures with upgrades for spells
+                // if (multicast != undefined && multicast > 0 && abilityPanel.GetAttributeString("multicast", "") != "true") {
+                //     multicast = Math.round(multicast*100) /100
+
+                //     abilityPanel.SetAttributeString("multicast", "true")
+
+                //     let spellBooster = $.CreatePanel("Panel", abilityPanel, "");
+
+                //     if (spellBooster != null) {
+                //         spellBooster.SetHasClass("AbilityOgreMagiSpellBoost", true)
+                //         spellBooster.hittest = false
+
+                //         let spellBoosterValue = $.CreatePanel("Label", spellBooster, "");
+    
+                //         if (spellBoosterValue != null) {
+                //             spellBoosterValue.SetHasClass("AbilityOgreMagiSpellBoostLabel", true)
+                //             spellBoosterValue.text = "x" + multicast
+
+                //             if (multicast == multiCastBoost2x) {
+                //                 spellBoosterValue.SetHasClass("BoostX2", true)
+                //             }
+
+                            
+                //             if (multicast == multiCastBoost3x) {
+                //                 spellBoosterValue.SetHasClass("BoostX3", true)
+                //             }
+                //         }
+                            
+                //         let multiCastEffect = 1
+
+                //         if (multicast == multiCastBoost2x) {
+                //             multiCastEffect = 2
+                //         } else if (multicast == multiCastBoost3x) {
+                //             multiCastEffect = 3
+                //         }
+
+                //         let particleScene = $.CreatePanel("DOTAParticleScenePanel", abilityPanel, "", {
+                //             hittest : false,
+                //             particleName : "particles/ui/hud/spell_boost_x" + multiCastEffect,
+                //             particleonly : true,
+                //             cameraOrigin : "0 0 60",
+                //             fov : 70,
+                //             class :"AbilityOgreMagiSpellBoostParticle",
+                //         });
+
+                //         if (particleScene != null) {
+                //             particleScene.SetHasClass("AbilityOgreMagiSpellBoostParticle", true)
+
+                //         }
+
+                //         let noLongAnimation = false
+
+                //         if (CURRENT_SELECTION_PHASE == 1) {
+                //             noLongAnimation = true
+                //         }
+
+                //         //for some reason, ogre has no particle on animation if this fuction is run without schedule
+                //         $.Schedule(0.1, function(){PlayOgreBoostAnimation(multiCastEffect, noLongAnimation)});
+                //     }
+                // }
+            }       
+        }
+    }
+}
+
+function AddAghanimsIconToAbility(abilityName, abilityPanel)
+{
+    if (ABILITY_AGHANIM_CHECKS[abilityName] === undefined) {
+        ABILITY_AGHANIM_CHECKS[abilityName] = 0
+    }
+
+    //max 3 attempts
+    if (ABILITY_AGHANIM_CHECKS[abilityName] > 3) {
+        return
+    }
+
+    ABILITY_AGHANIM_CHECKS[abilityName] += 1
+
+    let isScepterAvailable = false
+    let isShardAvailable = false
+
+    let aghanimInfo = GetAbilityAghanimUpgrades(abilityName)
+
+    if (aghanimInfo != null && aghanimInfo["upgrade_status"] !== undefined && aghanimInfo["upgrade_status"] !== "") {
+        isShardAvailable = aghanimInfo["upgrade_status"].includes("shard")
+        isScepterAvailable = aghanimInfo["upgrade_status"].includes("scepter")
+    }
+
+    //show scepter and shard availability icons
+    if (isScepterAvailable || isShardAvailable) {
+        if (isShardAvailable && abilityPanel.FindChildTraverse("ShardInfoIcon") == null) {
+            let shardInfo =  $.CreatePanel("Panel", abilityPanel, "ShardInfoIcon");
+
+            shardInfo.SetHasClass("AbilityShardUpgradeAvailable", true)
+        }
+
+        if (isScepterAvailable && abilityPanel.FindChildTraverse("ShardInfoIcon") == null) {
+            let scepterInfo = $.CreatePanel("Panel", abilityPanel, "ScepterInfoIcon");
+
+            scepterInfo.SetHasClass("AbilityScepterUpgradeAvailable", true)
+        }
+    }
+}
+
+function ShowAbilityBoard()
+{
+    let heroPickingWrapper = $("#HeroPickingScreen")
+    let abilityBoardWrapper = $("#AbilityPickingScreen")
+
+    if (abilityBoardWrapper !== null) {
+        abilityBoardWrapper.SetHasClass("ScreenVisible", true)
+    }
+
+    if (heroPickingWrapper !== null) {
+        heroPickingWrapper.SetHasClass("ScreenHidden", true)
+    }
+
+    //create players list
+    UpdatePlayersPickingPanels();
+
+    //players info
+    UpdatePlayersInfo()
+
+    //create abilites list
+    UpdateAvailableAbilities();
+
+    //create talent list
+    UpdateAvailableTalents();
+
+    //load base talents to talent slots:
+    UpdatePlayersTalentPicks();
+}
+
+function UpdatePlayersPickingPanels()
+{
+    let radiantContainer = $("#PlayersRadiantContainer")
+    let direContainer = $("#PlayersDireContainer")
+
+    radiantContainer.RemoveAndDeleteChildren();
+    direContainer.RemoveAndDeleteChildren();
+
+    let radiantHeroesOrder = CustomNetTables.GetTableValue( "players_hero_order", "radiant" );
+    let direHeroesOrder = CustomNetTables.GetTableValue( "players_hero_order", "dire" );
+
+    if (radiantHeroesOrder !== null && radiantHeroesOrder !== undefined && direHeroesOrder !== null && direHeroesOrder !== undefined) {
+        let radiantHeroesOrderArray = Object.values(radiantHeroesOrder)
+        let direHeroesOrderArray = Object.values(direHeroesOrder)
+
+        let allPlayersOrder = [radiantHeroesOrderArray, direHeroesOrderArray]
+
+        for (let i = 0; i < allPlayersOrder.length; i++) {
+            const teamPlayers = allPlayersOrder[i];
+
+            let container = radiantContainer
+            let className = "Radiant"
+
+            if (i == 1) {
+                container = direContainer
+                className = "Dire"
+            }
+
+            for (let j = 0; j < teamPlayers.length; j++) {
+                const playerID = teamPlayers[j];
+
+                let heroPickData = CustomNetTables.GetTableValue( "players_hero_picks", playerID.toString() );
+
+                if (heroPickData !== null && heroPickData !== undefined && typeof(heroPickData["hero_name"]) !== "null" && typeof(heroPickData["hero_name"]) !== "undefined") {
+                    let heroName = heroPickData["hero_name"] || "";
+                    let heroID = heroPickData["hero_id"] || 0;
+    
+                    let playerRow = $.CreatePanel('Panel', container, 'PlayerAbilityPicking_' + playerID);
+                    playerRow.SetHasClass("PlayerAbilityWrapper", true);
+
+                    if (MANY_PLAYERS_GAME) {
+                        playerRow.SetHasClass("ManyPlayers", true);
+                    }
+
+                    playerRow.BLoadLayoutSnippet('PlayerPickingAbility');
+                    playerRow.SetHasClass(className, true)
+        
+                    let playerPortraitWrapper = playerRow.FindChildrenWithClassTraverse("PlayerAbilityPortraitWrapper")
+    
+                    if (playerPortraitWrapper !== null && playerPortraitWrapper.length > 0){
+                        playerPortraitWrapper[0].SetHasClass(className, true)
+                        
+                        let scene = $.CreatePanel("DOTAScenePanel", playerPortraitWrapper[0], "");
+                        
+                        if (scene != null) {
+                            scene.SetUnit(heroName, "default", false)
+                            scene.particleonly = false,
+                            scene.environment = "default",
+                            scene.light = "hero_light"
+
+                            scene.SetHasClass("HeroAbilityPickPortrait", true)
+                            scene.SetAttributeString("hero_id", heroID)
+
+                            scene.SetPanelEvent("onmouseover", function(){
+                                ShowBaseHeroStatsTooltip("", scene);
+                            })
+    
+                            scene.SetPanelEvent("onmouseout", function(){
+                               $.DispatchEvent("UIHideCustomLayoutTooltip", "HeroBaseStatsTooltip")
+                            })
+                        }
+
+                        let treeTalent = $.CreatePanel("Panel", playerPortraitWrapper[0], "");
+
+                        if (treeTalent != null) {
+                            treeTalent.SetHasClass("PlayerBaseTreeTalent", true)
+                            treeTalent.SetAttributeString("player_id", playerID)
+
+                            treeTalent.SetPanelEvent("onmouseover", function(){
+                                ShowBaseHeroTreeTalents("", treeTalent);
+                            })
+    
+                            treeTalent.SetPanelEvent("onmouseout", function(){
+                               $.DispatchEvent("DOTAHUDHideStatBranchTooltip")
+                            })
+
+                            let treeImage = $.CreatePanel("Image", treeTalent, "");
+
+                            if (treeImage != null) {
+                                treeImage.SetScaling("stretch-to-fit-preserve-aspect")
+                                treeImage.SetImage("s2r://panorama/images/spellicons/statbranch_psd.vtex")
+
+                                treeImage.SetHasClass("PlayerBaseTreeTalentImage", true)
+                            }
+                        }
+
+                        let mmrNumber = $.CreatePanel("Label", playerPortraitWrapper[0], "");
+
+                        if (mmrNumber != null) {
+                            mmrNumber.SetHasClass("PlayerMMRNumber", true)
+                        }
+                    }
+
+                    let heroNameWrapper = playerRow.FindChildrenWithClassTraverse("PlayerAbilityHeroNameLabel")
+                    if (heroNameWrapper !== null && heroNameWrapper.length > 0) {
+                        heroNameWrapper[0].text = $.Localize( "#" + heroName );
+
+                        heroNameWrapper[0].SetHasClass(className, true)
+                    }
+
+                    //PlayerName
+                    let playerName = ""
+                    let playerSteamID = ""
+
+                    let playerInfo = Game.GetPlayerInfo(playerID);
+                    // $.Msg(playerInfo)
+
+                    if (playerInfo != null) {
+                        playerName = playerInfo["player_name"]
+                        playerSteamID = playerInfo["player_steamid"];
+                    }
+
+                    let playerNameWrapper = playerRow.FindChildrenWithClassTraverse("PlayerAbilityPlayerName")
+                    if (playerNameWrapper !== null && playerNameWrapper.length > 0) {
+                        playerNameWrapper[0].text = playerName
+
+                        if (playerID == Players.GetLocalPlayer()) {
+                            playerNameWrapper[0].SetHasClass("LocalPlayer", true)
+                        }
+                    }
+
+                    let playerAvatarWrapper = playerRow.FindChildrenWithClassTraverse("PlayerAbilityPlayerAvatar")
+                    if (playerAvatarWrapper !== null && playerAvatarWrapper.length > 0) {
+                        playerAvatarWrapper[0].steamid = playerSteamID
+
+                        if (playerID == Players.GetLocalPlayer()) {
+                            playerAvatarWrapper[0].SetHasClass("LocalPlayer", true)
+                        }
+                    }
+
+                    let pickedAbilityWrapper = playerRow.FindChildrenWithClassTraverse("PlayerPickedAbilityWrapper")
+
+                    if (pickedAbilityWrapper !== null && pickedAbilityWrapper.length > 0){                        
+                        CreateAbilityInventoryPanel(pickedAbilityWrapper[0], playerID);
+                    }
+                }   
+            }
+        }
+    }
+}
+
+var AbilityBoardLoaded = false;
+var HeroSelectionLoaded = false
+
+function ManageHeroAndAbilitySelection()
+{
+    let currentSelectionPhase = CustomNetTables.GetTableValue( "selection_info", "0" );
+
+    if (currentSelectionPhase == null || currentSelectionPhase == undefined) {
+        return;
+    }
+
+    if (typeof(currentSelectionPhase["select_phase"]) !== "null" && typeof(currentSelectionPhase["select_phase"]) !== "undefined") {
+        let currentPhase = currentSelectionPhase["select_phase"]
+
+        // $.Msg("current select phase: ", currentPhase)
+
+        if (currentPhase !== undefined) {
+            CURRENT_SELECTION_PHASE = currentPhase
+        }
+
+        if (currentPhase == 0 && !HeroSelectionLoaded) {
+            StartHeroSelection();
+            UpdatePlayersInfo();
+            UpdateTimer();
+            HeroSelectionLoaded = true
+        } else if (currentPhase > 0 && !AbilityBoardLoaded) {       
+
+            // there is little delay when server update nettable and client ask about them, so need to use schedule
+            $.Schedule(1.5, function() {
+                TryLoadMainPickingBoard()
+            })
+
+            AbilityBoardLoaded = true
+        }
+    }
+}
+
+
+function TryLoadMainPickingBoard()
+{
+    let radiantHeroesOrder = CustomNetTables.GetTableValue( "players_hero_order", "radiant" );
+    let direHeroesOrder = CustomNetTables.GetTableValue( "players_hero_order", "dire" );
+
+    if (radiantHeroesOrder == null || direHeroesOrder == null) {
+        $.Schedule(0.5, TryLoadMainPickingBoard)
+        return;
+    }
+
+    ShowAbilityBoard();
+    UpdateAbilityPickOrder();
+
+    let randomScreens = [
+        "s2r://panorama/images/events/diretide/2022/coming_soon_background_psd.vtex",
+        "s2r://panorama/images/backgrounds/sidelane_jpg.vtex",
+        "s2r://panorama/images/backgrounds/shifting_snow_png.vtex",
+        "s2r://panorama/images/backgrounds/embers_bg_1_png.vtex",
+        "s2r://panorama/images/backgrounds/outlanders_background_jpg.vtex",
+        // "s2r://panorama/images/loadingscreens/sandsofluxor_loadingscreen/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/roshan_greed/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/roshan_rage/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/radiantancient_loadingscreen/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/nemestice_2021_ls_3/loadingscreen.vtex",
+        "s2r://panorama/images/loadingscreens/midlane_loadingscreen/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/fall_major_2016_loadscreen_3/loadingscreen.vtex",
+        "s2r://panorama/images/loadingscreens/chicken_hut_ward_screen/loadingscreen_tga.vtex",
+        "s2r://panorama/images/loadingscreens/babka_bewitcher_screen/loadingscreen_tga.vtex",
+    ]
+
+    let mainBoard = $("#AbilityPickingScreen")
+
+    if (mainBoard != null) {
+        mainBoard.style.backgroundImage = "url('" + randomScreens[Math.floor(Math.random()*randomScreens.length)] + "')"
+    }
+    
+}
+
+function UpdatePotentialHeroPicks()
+{
+    let radiantContainer = $("#TeamRadiantContainer")
+    let direContainer = $("#TeamDireContainer")
+
+    let maxPlayers = Players.GetMaxPlayers()
+
+    for (let index = 0; index < maxPlayers; index++) {
+        const playerID = index;
+
+        if (Players.IsValidPlayerID(playerID)) {
+            let heroPickData = CustomNetTables.GetTableValue( "players_hero_picks", playerID.toString() );
+
+            if (heroPickData !== null && heroPickData !== undefined && typeof(heroPickData["hero_id"]) !== "null" && typeof(heroPickData["hero_id"]) !== "undefined") {
+                let heroID = heroPickData["hero_id"]
+                let team = heroPickData["team"]
+                let confirmed = heroPickData["confirmed"]
+
+                if (team != null && team != undefined) {
+                    let container = radiantContainer
+
+                    if (team == "dire") {
+                        container = direContainer
+                    }
+    
+                    if ($("#player_hero_pick_" + playerID) == null) {
+                        let heroPickWrapper = $.CreatePanel("Panel", container, "")
+
+                        if (heroPickWrapper != null) {
+                            heroPickWrapper.SetHasClass("HeroPotentialPickWrapper", true)
+
+                            let potentialHeroAvatar = $.CreatePanel("DOTAHeroImage", heroPickWrapper, "player_hero_pick_" + playerID);
+
+                            if (potentialHeroAvatar != null) {
+                                potentialHeroAvatar.heroimagestyle = "landscape"
+                                potentialHeroAvatar.heroid = heroID
+                                potentialHeroAvatar.SetScaling("stretch-to-cover-preserve-aspect")
+                                potentialHeroAvatar.hittest = false
+
+                                potentialHeroAvatar.SetHasClass("HeroPotentialPick", true)
+                            }
+
+                            let playerInfo = Game.GetPlayerInfo(playerID);
+                            // $.Msg(playerInfo)
+        
+                            if (playerInfo != null) {
+                                let playerName = playerInfo["player_name"]
+                                let label = $.CreatePanel("Label", heroPickWrapper, "")
+                                if (label != null) {
+                                    label.SetHasClass("HeroPotentialPickLabel", true)
+                                    label.text = playerName
+                                }
+
+                            }
+                        }
+
+                    } else {
+                        // $.Msg("hero id: ", heroID)
+                        let playerHeroImage = $("#player_hero_pick_" + playerID)
+
+                        if (playerHeroImage != null) {
+                            playerHeroImage.heroid = heroID
+
+                            if (confirmed == 1) {
+                                playerHeroImage.SetHasClass("HeroConfirmed", true)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function PickTalent(talentName, talentLevel, talentSlot)
+{
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    GameEvents.SendCustomGameEventToServer( "talent_selected", 
+                                            { 
+                                                player_id : playerID, 
+                                                talent_name : talentName, 
+                                                talent_level: talentLevel,
+                                                talent_slot: talentSlot,
+                                            } 
+    );
+}
+
+function PickAbility(abilityType, abilityName)
+{
+
+    let playerID = Players.GetLocalPlayer()
+
+    let ctrlHold = GameUI.IsControlDown()
+    let altHold = GameUI.IsAltDown()
+
+    let abilitySuggestTooltip = "#DOTA_Ability_Draft_Chat_SuggestAbility"
+    let abilityRequestTooltip = "#DOTA_Ability_Draft_Chat_RequestAbility"
+
+    let abilitySuggestText = $.Localize(abilitySuggestTooltip)
+    let abilityRequestText = $.Localize(abilityRequestTooltip)
+
+    let replaceText = "{ability_name}"
+
+    if (abilitySuggestTooltip !== abilitySuggestText) {
+        let abilityLabelTooltip = "#DOTA_Tooltip_ability_" + abilityName
+        let abilityLabel = $.Localize(abilityLabelTooltip)
+
+        if (abilityLabelTooltip !== abilityLabel) {
+            abilitySuggestText = abilitySuggestText.replace(replaceText, abilityLabel)
+        }
+    }
+
+    if (abilityRequestText !== abilityRequestTooltip) {
+        let abilityLabelTooltip = "#DOTA_Tooltip_ability_" + abilityName
+        let abilityLabel = $.Localize(abilityLabelTooltip)
+
+        if (abilityLabelTooltip !== abilityLabel) {
+            abilityRequestText = abilityRequestText.replace(replaceText, abilityLabel)
+        }
+    }
+
+    GameEvents.SendCustomGameEventToServer( "ability_selected", 
+                                            { 
+                                                player_id : playerID, 
+                                                ability_name : abilityName, 
+                                                ability_type: abilityType,
+                                                ctrl_hold : ctrlHold,
+                                                alt_hold : altHold,
+                                                request_text : abilityRequestText,
+                                                suggest_text : abilitySuggestText
+                                            } 
+    );
+}
+
+function UpdateAbilityPickOrder()
+{
+    let pickOrderTable = CustomNetTables.GetTableValue( "ability_pick_order", "0" );
+
+    if (pickOrderTable == null || pickOrderTable == undefined) {
+        return;
+    }
+
+    // $.Msg(pickOrderTable)
+
+    let mainPickingPanel = $("#AbilityPickingCenterPanel")
+    let pickOrderPanel = $("#AbilityPickingOrder")
+    let currentPickPanel = $("#AbilityPlayerCurrentPick")
+    let abilityInfoLabel = $("#AbilityPickingInfoLabel")
+    let abilityTimerLabel = $("#AbilityPickingInfoTimer")
+    
+    let currentPlayerPickData = pickOrderTable["current_player_pick"]
+
+    let currentPlayerID = currentPlayerPickData["player_id"]
+    let currentHeroID = currentPlayerPickData["hero_id"]
+    let currentPlayerPickTime = pickOrderTable["pick_time"]
+    let endPickingTime = pickOrderTable["end_picking_time"]
+
+    let currentPhase = pickOrderTable["current_phase"]
+    let currentPhaseTimer = pickOrderTable["current_phase_timer"]
+
+    let roundNumber = 1
+
+    if (typeof(currentPlayerPickData["round_number"]) !== "undefined") {
+        roundNumber = currentPlayerPickData["round_number"]
+    }
+
+    let draftEnd = pickOrderTable["draft_end"]
+    let basePickTime = BASE_PICK_TIME
+
+    if (typeof(pickOrderTable["base_pick_time"]) !== "undefined") {
+        basePickTime = pickOrderTable["base_pick_time"]
+    }
+
+    let picksPerRound = 1
+
+    if (typeof(pickOrderTable["picks_per_round"]) !== "undefined") {
+        picksPerRound = pickOrderTable["picks_per_round"]
+    }
+
+    let pickRounds = 4
+
+    if (typeof(pickOrderTable["pick_rounds"]) !== "undefined") {
+        pickRounds = pickOrderTable["pick_rounds"]
+    }
+
+    currentPickPanel.RemoveAndDeleteChildren();
+    abilityInfoLabel.text = "";
+    abilityTimerLabel.text= "";
+
+    //Add Special Class for player Wrapper panel during pick time
+    let playersPanelWrappers = mainPickingPanel.FindChildrenWithClassTraverse("PlayerAbilityWrapper")
+
+    if (playersPanelWrappers !== null && playersPanelWrappers.length > 0) {
+        for (let index = 0; index < playersPanelWrappers.length; index++) {
+            const element = playersPanelWrappers[index];
+
+            if (element.id != "PlayerAbilityPicking_" + currentPlayerID) {
+                element.SetHasClass("CurrrentPlayerPickingTime", false)
+            }
+        }
+    }
+
+    let playerPanel = $("#PlayerAbilityPicking_" + currentPlayerID)
+    if (playerPanel !== null) {
+        playerPanel.SetHasClass("CurrrentPlayerPickingTime", true)
+
+        if (PICK_SOUND_EMITED_ON_PLAYER_ID != currentPlayerID) {
+            PICK_SOUND_EMITED_ON_PLAYER_ID = currentPlayerID
+            Game.EmitSound("Draft.Current.Pick")
+        }
+    }
+
+    let extraPicksPanel = mainPickingPanel.FindChildTraverse("AbilityPickingExtraPickCountInfo")
+    let pickCountLabel = extraPicksPanel.FindChildTraverse("AbilityPickingExtraPickCount")
+    let roundTitle = mainPickingPanel.FindChildTraverse("AbilityPickingExtraPickCountLabel")
+
+    let roundPickText = ""
+
+    if (currentPhase == 1) {
+        roundPickText = "Pick Rules: <font color='red'>" + picksPerRound + " x " + pickRounds + "</font>"
+        roundNumber = 0
+    } else if (currentPhase == 2) {
+        roundPickText = "Banning Phase"
+        roundNumber = 1
+        pickCountLabel.SetHasClass("Banning", true)
+
+        if (!BAN_START_SOUND_EMITED) {
+            Game.EmitSound("Ability_Pick_Ban");
+            BAN_START_SOUND_EMITED = true
+        }
+    } else {
+        roundPickText = "Picking Phase"
+        pickCountLabel.SetHasClass("Banning", false)
+    }
+
+    if (extraPicksPanel !== null) {
+        if (currentPlayerPickData["pick_count"] !== undefined ) {
+
+            if (currentPlayerID == Players.GetLocalPlayer()) {
+                let extraPickCount = currentPlayerPickData["pick_count"]
+
+                let extraPicksText = " pick available";
+                if (extraPickCount > 1) {
+                    extraPicksText = " picks available";
+                }
+
+                roundPickText = extraPickCount + extraPicksText
+
+                if (extraPickCount == 0)  {
+                    roundPickText = "<font color='red'>no more picks!</font>"
+                }
+            }
+        }
+    }
+
+    if (pickCountLabel !== null) {
+        pickCountLabel.text = roundPickText
+    }
+
+    if (roundTitle != null && roundNumber !== null) {
+        roundTitle.text = "Round Number: <span class='PickingRoundNumber'>" + roundNumber + "</span>"
+    }
+
+    if (draftEnd !== undefined && draftEnd == 1) {
+        // $.Msg("draft has end!")
+
+        if (endPickingTime > 0) {
+            abilityInfoLabel.text = "ABILITY DRAFT ENDS IN:"
+            abilityTimerLabel.text = endPickingTime + "s"
+
+            abilityTimerLabel.SetHasClass("LocalPlayerPickTime", false)
+
+            if (extraPicksPanel !== null) {
+                extraPicksPanel.visible = false
+            }
+        }
+        
+        return;
+    }
+
+    //Show current picking hero in bigger panel
+    if (currentHeroID !== undefined && currentHeroID != -1) {
+        // $.Msg("tworze hero image: ", currentHeroID)
+        let currentHeroPickAvatar = $.CreatePanel("DOTAHeroImage", currentPickPanel, "");  
+
+        if (currentHeroPickAvatar != null) {
+            currentHeroPickAvatar.heroimagestyle = "portrait"
+            currentHeroPickAvatar.heroid = currentHeroID
+            currentHeroPickAvatar.SetScaling("stretch-to-cover-preserve-aspect")
+            currentHeroPickAvatar.hittest = false
+
+            currentHeroPickAvatar.SetHasClass("CurrentPlayerHeroPick", true)
+        }
+    }
+
+    let pickOrder = Object.values(pickOrderTable["order"])
+    // $.Msg(pickOrder)
+
+    pickOrderPanel.RemoveAndDeleteChildren();
+
+    for (let index = 0; index < pickOrder.length; index++) {
+        const playerData = pickOrder[index];
+        const playerID = pickOrder[index]["player_id"]
+        const heroID = pickOrder[index]["hero_id"]
+
+        let heroAvatar = $.CreatePanel("DOTAHeroImage", pickOrderPanel, ""); 
+        
+        if (heroAvatar != null) {
+            heroAvatar.heroimagestyle = "portrait"
+            heroAvatar.heroid = heroID
+            heroAvatar.SetScaling("stretch-to-cover-preserve-aspect")
+            heroAvatar.hittest = false
+
+            heroAvatar.SetHasClass("HeroPickOrder", true)
+        }
+    }
+
+    //ban phase
+    if (currentPhase == 1) {
+        abilityInfoLabel.text = "ABILITY DRAFT STARTS IN:"
+        abilityTimerLabel.text = currentPhaseTimer + "s"
+
+    } else if (currentPhase == 2) {
+        abilityInfoLabel.text = "Nominate One Ability For Banning:"
+        abilityTimerLabel.text = currentPhaseTimer + "s"
+
+    } else if (currentPhase == 3 ) {
+        if (Players.GetLocalPlayer() == currentPlayerID){
+            if (currentPlayerPickTime > 0) {
+                abilityInfoLabel.text = "DRAFT YOUR ABILITY NOW:"
+                abilityTimerLabel.text = currentPlayerPickTime + "s"
+
+                abilityTimerLabel.SetHasClass("LocalPlayerPickTime", true)
+
+                if (currentPlayerPickTime == basePickTime) {
+                    if (!DRAFT_NOW_EMITED) {
+                        DRAFT_NOW_EMITED = true
+                        Game.EmitSound("Draft.Turn.Now");
+                    }
+                } else {
+                    DRAFT_NOW_EMITED = false
+                }
+            }
+        } else {
+            let foundNextPickTime = false
+
+            abilityTimerLabel.SetHasClass("LocalPlayerPickTime", false)
+
+            for (let index = 0; index < pickOrder.length; index++) {
+                const element = pickOrder[index];
+                if (element["player_id"] == Players.GetLocalPlayer()) {
+
+                    abilityInfoLabel.text = "YOU WILL DRAFT IN:"
+                    abilityTimerLabel.text = element["pick_time"] + "s"
+
+                    if ( element["pick_time"] <= 3) {
+                        let countSound = "Draft.Timer." + pickOrder[0]["pick_time"]
+
+                        if (LAST_COUNT_EMITED != countSound )  {
+                            Game.EmitSound(countSound );
+                            LAST_COUNT_EMITED = countSound
+                        }
+                    }
+
+                    foundNextPickTime = true
+
+                    break;
+                }
+            }
+
+            if (!foundNextPickTime) {
+                abilityInfoLabel.text = "ABILITY DRAFT ENDS IN:"
+                abilityTimerLabel.text = endPickingTime + "s"
+            }
+        }
+    } 
+}
+
+function CreateAbilityInventoryPanel(parentPanel, playerID)
+{
+    let localPlayerID = Players.GetLocalPlayer();
+    let isLocalPlayer = Players.IsValidPlayerID(localPlayerID) && localPlayerID == playerID;
+
+    parentPanel.SetAttributeString("playerID", playerID);
+
+    for ( let i = 1; i <= ABILITY_PICK_MAX; ++i )
+    {
+        let setPanelDraggable = false
+        let slotName = "base_" + i
+
+        if (isLocalPlayer) {
+            setPanelDraggable = true
+        }
+
+        if ( i == ABILITY_PICK_MAX )
+        {
+            setPanelDraggable = false
+            slotName = "ultimate"
+        }
+
+        let abilityPanel = $.CreatePanel( "DOTAAbilityImage", parentPanel, "player_" + playerID + "_ability_" + slotName);
+        abilityPanel.SetHasClass("PlayerPickedAbility", true);
+        abilityPanel.SetAttributeString("slotName", slotName);
+
+        if (setPanelDraggable) {
+            abilityPanel.SetDraggable(true)
+        }
+    }
+
+    UpdatePlayerAbilityInventory(playerID);
+}
+
+function UpdatePlayerAbilityInventory(playerID)
+{
+    let mainPanel = $("#AbilityPickingCenterPanel")
+    if (mainPanel == null) {
+        return;
+    }
+
+    let playerAbilitiesPanel = mainPanel.FindChildTraverse("PlayerAbilityPicking_" + playerID)
+    if (playerAbilitiesPanel == null) {
+        return;
+    }
+
+    let pickedAbilities = CustomNetTables.GetTableValue( "players_ability_picks", playerID.toString() );
+
+    if (pickedAbilities !== null && pickedAbilities !== undefined) {
+
+        let pickedAbilitiesData = Object.values(pickedAbilities)
+
+        for (let i = 0; i < pickedAbilitiesData.length; i++) {
+            const element = pickedAbilitiesData[i];
+
+            const slotName = element["ability_slot"] || "";
+            const abilityName = element["ability_name"] || ""; 
+            
+            let abilitySlots = playerAbilitiesPanel.FindChildrenWithClassTraverse("PlayerPickedAbilityWrapper")
+            if (abilitySlots !== null && abilitySlots.length > 0){
+                let slotPanel = abilitySlots[0].FindChildTraverse( "player_" + playerID + "_ability_" + slotName)
+
+                if (slotPanel !== null) {
+                    let previousAbilityName = slotPanel.abilityname
+                    let needUpdate = true
+
+                    //removed from game - instead of added Golden treasures with upgrades for spells
+                    //check if picked ability is boosted
+                    let showBoostEffect =  false
+                    
+                    // let boostedAbilities = CustomNetTables.GetTableValue( "boosted_abilities", "0" );
+                    // if (abilityName != "") {
+                    //     if (boostedAbilities != null && boostedAbilities != undefined) {
+                    //         let isAbilityBoosted = boostedAbilities[abilityName]
+
+                    //         if (typeof(isAbilityBoosted) == "object") {
+                    //             showBoostEffect = true
+                    //             needUpdate = true
+                    //         }
+                    //     }
+                    // }
+
+                    // if (showBoostEffect) {
+                    //     let isBoostEffectExist = slotPanel.FindChildrenWithClassTraverse("AbilityOgreMagiSpellBoost")
+
+                    //     if (isBoostEffectExist != null && isBoostEffectExist != undefined && isBoostEffectExist.length > 0) {
+                    //         needUpdate = false
+                    //     }
+                    // }
+
+                    //always update if ability name changed
+                    if (previousAbilityName != abilityName) {
+                        needUpdate = true;
+                    }
+
+                    if (!needUpdate) {
+                        continue;
+                    }
+                    
+                    slotPanel.abilityname = abilityName
+
+                    if (abilityName != "") {
+                        slotPanel.SetPanelEvent("onmouseover", function () {
+                            $.DispatchEvent("DOTAShowAbilityTooltip", slotPanel, abilityName);
+                        });
+    
+                        slotPanel.SetPanelEvent("onmouseout", function () {
+                            $.DispatchEvent("DOTAHideAbilityTooltip");
+                        });
+                    } else {
+                        slotPanel.ClearPanelEvent("onmouseover")
+                    }
+
+                    slotPanel.RemoveAndDeleteChildren();
+
+                    if (showBoostEffect) {
+
+                        let multicast = boostedAbilities[abilityName]["multi_cast"] || 0;
+                        multicast = Math.round(multicast *100) / 100
+    
+                        let spellBooster = $.CreatePanel("Panel", slotPanel, "");
+    
+                        if (spellBooster != null) {
+                            spellBooster.hittest = false
+                            spellBooster.SetHasClass("AbilityOgreMagiSpellBoost", true)
+                                
+                            let multiCastEffect = 1
+    
+                            if (multicast == multiCastBoost2x) {
+                                multiCastEffect = 2
+                            } else if (multicast == multiCastBoost3x) {
+                                multiCastEffect = 3
+                            }
+    
+                            let boostParticles = $.CreatePanel("DOTAParticleScenePanel", slotPanel, "", {
+                                hittest : false,
+                                particleName : "particles/ui/hud/spell_boost_x" + multiCastEffect,
+                                particleonly : true,
+                                cameraOrigin : "0 0 60",
+                                fov : 70,
+                            });
+
+                            if (boostParticles != null) {
+                                boostParticles.SetHasClass("AbilityOgreMagiSpellBoostParticle", true)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function UpdateAbilityInventoryPanels()
+{
+    let maxPlayers = Players.GetMaxPlayers()
+
+    for (let index = 0; index < maxPlayers; index++) {
+        if (Players.IsValidPlayerID(index)) {
+            UpdatePlayerAbilityInventory(index)
+        }
+    }
+}
+
+var PARTY_COLORS = {
+    [1] : "#00fcff", //Teal
+    [2] : "#fff94e", //Yellow
+    [3] : "#ff9ff9", //Pink
+    [4] : "#D22730", //Red
+    [5] : "#ff6ea8", //Blue
+    [6] : "#65D413", //Green
+    [7] : "#815336", //Brown
+    [8] : "#1BC0D8", //Cyan
+    [9] : "#C7E40D", //Olive
+    [10] : "#f543de", //Red
+}
+
+var PARTY_IDS = {}
+
+var PARTY_COUNTER = 0
+
+function UpdatePlayersInfo()
+{
+    let mainPanel = $("#AbilityPickingCenterPanel")
+    if (mainPanel == null) {
+        return;
+    }
+
+    let maxPlayers = Players.GetMaxPlayers()
+
+    for (let playerID = 0; playerID < maxPlayers; playerID++) {
+        if (!Players.IsValidPlayerID(playerID)) {
+            continue;
+        }
+
+        let playerInfo = CustomNetTables.GetTableValue( "players_info", playerID.toString() );
+        if (playerInfo !== null && playerInfo !== undefined) {
+            
+            let playerAbilitiesPanel = mainPanel.FindChildTraverse("PlayerAbilityPicking_" + playerID)
+            if (playerAbilitiesPanel != null) {
+                let playerMMR = playerInfo["mmr"];
+
+                let mmrLabel = playerAbilitiesPanel.FindChildrenWithClassTraverse("PlayerMMRNumber")
+                if (mmrLabel !== null && mmrLabel.length > 0 && playerMMR !== undefined){
+                    mmrLabel[0].text = playerMMR
+                }
+                
+                if (typeof(playerInfo["party_id"] !== "undefined") && playerInfo["party_id"] != null && playerInfo["party_id"] != "0")
+                {
+                    let partyID = playerInfo["party_id"]
+                    let partyNumber = 0
+                    let color = "red"
+
+                    if (typeof(PARTY_IDS[partyID]) == "undefined") {
+                        PARTY_COUNTER += 1
+                        PARTY_IDS[partyID] = PARTY_COUNTER
+                        partyNumber = PARTY_COUNTER
+                    } else {
+                        partyNumber = PARTY_IDS[partyID]
+                    }
+
+                    if (typeof(PARTY_COLORS[partyNumber]) !== "undefined") {
+                        color = PARTY_COLORS[partyNumber]
+                    }
+
+                    let partyIndicator = playerAbilitiesPanel.FindChildrenWithClassTraverse("PartyTeamColor")
+
+                    if (partyIndicator != null && partyIndicator.length > 0) {
+                        partyIndicator[0].style["background-color"] = color
+                    }
+                }
+            }
+            
+            //Update Rerolls:
+            if (playerID == Players.GetLocalPlayer()) {
+                let heroRerollsCounter = $("#PatronRerollHeroesCounter")
+                let heroRerolls = playerInfo["hero_rerolls"] || 0
+    
+                if (heroRerollsCounter != null) {
+                    heroRerollsCounter.text = heroRerolls
+    
+                    let container = heroRerollsCounter.GetParent().GetParent()
+    
+                    if (container != null) {
+                        if (heroRerolls == 0) {
+                            container.hittest = false
+                            container.SetHasClass("NoRolls", true);
+                        } else {
+                            container.hittest = true
+                            container.SetHasClass("NoRolls", false);
+                        }
+                    }
+                }
+    
+                let talentRerollsCounter = $("#PatronRerollTalentCounter")
+                let talentRerolls = playerInfo["talent_rerolls"] || 0
+    
+                if (talentRerollsCounter != null) {
+                    talentRerollsCounter.text = talentRerolls
+    
+                    let container = talentRerollsCounter.GetParent().GetParent()
+    
+                    if (container != null) {
+                        if (talentRerolls == 0) {
+                            container.hittest = false
+                            container.SetHasClass("NoRolls", true);
+                        } else {
+                            container.hittest = true
+                            container.SetHasClass("NoRolls", false);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function OnDragStart( panel, dragCallbacks )
+{
+    let playerID = Players.GetLocalPlayer()
+    if (!Players.IsValidPlayerID(playerID)) {
+        return true;
+    }
+
+    if (panel.GetParent().GetAttributeString("playerID", "") != playerID) {
+        return false
+    }
+
+    let abilityName = panel.abilityname
+    if (abilityName === null || abilityName === undefined || abilityName == "") {
+        return true
+    }
+
+    $.DispatchEvent("DOTAHideAbilityTooltip");
+
+    // create a temp panel that will be dragged around
+    let contextPanel = $("#DraggingIconsContainer")
+
+    if (contextPanel == null){
+        return true
+    }
+
+    var displayPanel = $.CreatePanel( "DOTAAbilityImage", contextPanel, "" );
+    displayPanel.SetHasClass("PlayerPickedAbilityDragging", true)
+    displayPanel.abilityname = abilityName;
+
+    displayPanel.Data().draggedAbility = abilityName;
+    displayPanel.Data().draggedAbilitySlot = panel.GetAttributeString("slotName", "");
+    displayPanel.Data().m_DragCompleted = false; // whether the drag was successful
+
+    // hook up the display panel, and specify the panel offset from the cursor
+    dragCallbacks.displayPanel = displayPanel;
+    dragCallbacks.offsetX = 15;
+    dragCallbacks.offsetY = 15;
+
+    panel.SetHasClass("PlayerPickedAbilityDragged", true)
+    
+    // // grey out the source panel while dragging
+    // $.GetContextPanel().AddClass( "dragging_from" );
+    return true;
+}
+
+function OnDragEnter( panel, draggedPanel )
+{
+    // $.Msg("enter: ", panel)
+
+    let playerID = Players.GetLocalPlayer()
+    if (panel.GetParent().GetAttributeString("playerID", "") != playerID) {
+        return false
+    }
+
+    if (!panel.IsDraggable()) {
+        return false
+    }
+
+    let abilitySlotName = panel.GetAttributeString("slotName", "")
+
+    //only care about dragged abilities other than us
+    if (abilitySlotName == draggedPanel.Data().draggedAbilitySlot) {
+        return true
+    }
+
+    var draggedAbility = draggedPanel.Data().draggedAbility;
+
+    //ignore empty abilities
+    if ( draggedAbility == null || draggedAbility == "" )
+    {
+        return true;
+    }
+
+    // highlight this panel as a drop target
+    panel.AddClass( "PlayerPickedAbilityDragTarget" );
+    return true;
+}
+
+function OnDragLeave( panel, draggedPanel )
+{
+    // $.Msg("OnDragLeave")
+    // $.Msg("leave: ", panel)
+
+    let playerID = Players.GetLocalPlayer()
+    if (panel.GetParent().GetAttributeString("playerID", "") != playerID) {
+        return false
+    }
+
+    if (!panel.IsDraggable()) {
+        return false
+    }
+
+    let abilitySlotName = panel.GetAttributeString("slotName", "")
+
+    //only care about dragged abilities other than us
+    if (abilitySlotName == draggedPanel.Data().draggedAbilitySlot) {
+        return true
+    }
+
+    let draggedAbility = draggedPanel.Data().draggedAbility;
+
+    //ignore empty abilities
+    if ( draggedAbility === null || draggedAbility == "" )
+    {
+        return true;
+    }
+
+    // un-highlight this panel
+    panel.RemoveClass( "PlayerPickedAbilityDragTarget" );
+    return true;
+}
+
+function OnDragDrop( panel, draggedPanel )
+{
+    // $.Msg("OnDragDrop")
+    // $.Msg("drop: ", panel)
+
+    let playerID = Players.GetLocalPlayer()
+    if (panel.GetParent().GetAttributeString("playerID", "") != playerID) {
+        return false
+    }
+
+    if (!panel.IsDraggable()) {
+        return false
+    }
+
+    // executing a slot swap - don't drop on the world
+    draggedPanel.Data().m_DragCompleted = true;
+    
+    let abilitySlotName = panel.GetAttributeString("slotName", "")
+
+    //only care about dragged abilities other than us
+    if (abilitySlotName == draggedPanel.Data().draggedAbilitySlot) {
+        return true
+    }
+
+    var draggedAbility = draggedPanel.Data().draggedAbility;
+    
+    //ignore empty abilities
+    if ( draggedAbility == "" ) {
+        return true;
+    }
+    
+    let previousSlot = draggedPanel.Data().draggedAbilitySlot || "";
+    let currentSlot = panel.GetAttributeString("slotName", "")
+
+    GameEvents.SendCustomGameEventToServer( "ability_slot_swapped", 
+                                            {
+                                                player_id : playerID, 
+                                                ability_name: draggedAbility, 
+                                                previous_slot: previousSlot, 
+                                                current_slot: currentSlot
+                                            } 
+    );
+
+    return true;
+}
+
+function OnDragEnd( panel, draggedPanel )
+{
+    // $.Msg("OnDragEnd")
+
+    // kill the display panel
+    draggedPanel.DeleteAsync( 0 );
+
+    // restore our look
+    panel.RemoveClass( "PlayerPickedAbilityDragged" );
+    return true;
+}
+
+var AbilityScepterShardScheduler = null;
+var FIRST_ABILITY_TOOLTIP_CHECK = false;
+
+function OnAbilityTooltipHeroSelection(panel, abilityName) {
+    if (Game.GameStateIsAfter( DOTA_GameState.DOTA_GAMERULES_STATE_STRATEGY_TIME)) {
+        return;
+    }
+    
+    if (panel.FindAncestor("CustomUIRoot") == null) {
+        // $.Msg("hero selection - nie custom root")
+        return;
+    }
+
+    try {
+        if (AbilityScepterShardScheduler !== null) {
+            $.CancelScheduled(AbilityScepterShardScheduler);
+            AbilityScepterShardScheduler = null;
+        }      
+    } catch (error) {
+        $.Msg("Error when clear schedulers")
+    }
+
+    AddAbilityDraftNotes(abilityName, false);
+    AddAbilitySpecialUpgradeInfo(abilityName, false)
+
+    //removed from game - instead of added Golden treasures with upgrades for spells
+    // CreateAndShowBoostSpellValue(abilityName, false);
+
+    if (FIRST_ABILITY_TOOLTIP_CHECK) {
+        FIRST_ABILITY_TOOLTIP_CHECK = false
+
+        $.Schedule(0.1, function() {
+            $.DispatchEvent( "DOTAShowAbilityTooltip", panel, abilityName );
+        })
+
+    } else {
+        let mainHudPanel = GetMainHUDPanel()
+        if (mainHudPanel == null) {
+            return;
+        }
+
+        let tooltipManager = mainHudPanel.FindChildTraverse("Tooltips");
+        if (tooltipManager == null) {
+            return;
+        }
+
+        let mainTooltipPanel = tooltipManager.FindChildTraverse(AbilityTooltipPanelID)
+        if (mainTooltipPanel == null) {
+            return;
+
+        }
+
+        let scepterContainer = mainTooltipPanel.FindChildTraverse("ScepterUpgradeDescription")
+        if (scepterContainer == null) {
+        }
+
+        let shardContainer = mainTooltipPanel.FindChildTraverse("ShardUpgradeDescription")
+        if (shardContainer == null) {
+        }
+
+        let abilityUpgradeData = GetAbilityAghanimUpgrades(abilityName)
+
+        if (abilityUpgradeData == null) {
+            return
+        }
+
+        mainTooltipPanel.style.visibility = "collapse";
+
+        AbilityScepterShardScheduler = $.Schedule(0.1, function(){
+            
+            if (scepterContainer !== null) {
+                scepterContainer.RemoveAndDeleteChildren();
+            }
+            
+            if (shardContainer !== null) {
+                shardContainer.RemoveAndDeleteChildren();
+            } 
+            
+            mainTooltipPanel.style.visibility = "visible";
+
+            AddAbilityShardScepterUpgradesInfo(abilityUpgradeData, scepterContainer, shardContainer, true, false)
+            CheckUpdatedTooltipCorrectPosition(mainTooltipPanel);
+            AbilityScepterShardScheduler = null;
+        })
+    }
+}
+
+function ShowBaseHeroStatsTooltip(panelID, panel)
+{   
+    if (panel == null || panel == undefined || typeof(panel) != "object") {
+        panel = $("#" + panelID)
+        if (panel == null) {
+            return;
+        }        
+    }
+
+    let values = {
+        base_str: 0,
+        base_agi: 0,
+        base_int: 0,
+        str_per_level:0,
+        agi_per_level:0,
+        int_per_level:0,
+        damage_min:0,
+        damage_max:0,
+        attack_rate:0,
+        attack_range: 0,
+        projectile_speed: 0,
+        armor:0,
+        magic_resistance:0,
+        movement_speed: 0,
+        turn_rate: 0,
+        day_sight_range:0,
+        night_sight_range:0,
+        max_health:0,
+        health_regen:0,
+        max_mana: 0,
+        mana_regen: 0,
+    }
+
+
+    let heroID = panel.GetAttributeString("hero_id", "-1")
+
+    let heroData = CustomNetTables.GetTableValue( "hero_base_stats", heroID );
+    if (typeof(heroData) == "null" || typeof(heroData) == "undefined" ) {
+        return;
+    }
+
+    let params = ""
+
+    for (const key in values) {
+
+        if (heroData[key] !== null && heroData[key] !== undefined) {
+            if (params.length > 0) {
+                params += "&"
+            }
+
+            let value = Math.round(heroData[key] * 10) / 10;
+            params += key + "=" + value;
+        }
+    }
+
+    $.DispatchEvent("UIShowCustomLayoutParametersTooltip", panel, "HeroBaseStatsTooltip", 
+    "file://{resources}/layout/custom_game/hero_base_stats.xml", params);
+}
+
+function RemovePlayerSelectedTalent(talentLevel, talentSlot)
+{
+
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    GameEvents.SendCustomGameEventToServer( "talent_removed", 
+                                            { 
+                                                player_id : playerID, 
+                                                talent_level: talentLevel,
+                                                talent_slot: talentSlot,
+                                            } 
+    );
+}
+
+function RerollTalents()
+{
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    $.DispatchEvent("UIHideTextTooltip");
+
+    GameEvents.SendCustomGameEventToServer( "talent_reroll", 
+                                            { 
+                                                player_id : playerID, 
+                                            } 
+    );
+
+    Game.EmitSound("Reroll.Base")
+}
+
+function RerollHeroes()
+{
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    $.DispatchEvent("UIHideTextTooltip");
+
+    // AddStylesToSelectedHeroOption("")
+
+    GameEvents.SendCustomGameEventToServer( "heroes_reroll", 
+                                            { 
+                                                player_id : playerID, 
+                                            } 
+    );
+
+    Game.EmitSound("Reroll.Base")
+}
+
+function OnDragStartTalent(panel, dragCallbacks)
+{
+    let playerID = Players.GetLocalPlayer()
+    if (!Players.IsValidPlayerID(playerID)) {
+        return true;
+    }
+
+    let abilityName = panel.abilityname
+    if (abilityName === null || abilityName === undefined) {
+        return true
+    }
+
+    $.DispatchEvent("UIHideTextTooltip")
+
+    // create a temp panel that will be dragged around
+    let contextPanel = $("#DraggingIconsContainer")
+
+    if (contextPanel == null){
+        return true
+    }
+
+    let displayPanel = $.CreatePanel( "DOTAAbilityImage", contextPanel, "" );
+    displayPanel.SetHasClass("PlayerPickedAbilityDragging", true)
+    displayPanel.abilityname = abilityName;
+
+    let customIcon = panel.GetAttributeString("custom_icon", "")
+
+    if (customIcon != null && customIcon != "") {
+        displayPanel.SetImage(customIcon)
+    }
+
+    displayPanel.SetAttributeString("talent_level", panel.GetAttributeString("talent_level", ""))
+    displayPanel.SetAttributeString("talent_name", panel.id)
+
+    // hook up the display panel, and specify the panel offset from the cursor
+    dragCallbacks.displayPanel = displayPanel;
+    dragCallbacks.offsetX = 15;
+    dragCallbacks.offsetY = 15;
+
+    panel.SetHasClass("Dragged", true)
+
+    return true;
+}
+
+function OnDragLeaveTalent(panel, draggedPanel)
+{
+    let talentLevel = draggedPanel.GetAttributeString("talent_level", "")
+    if (talentLevel == null || talentLevel == "") {
+        return true
+    }
+
+    if (panel == null || !panel.BHasClass("PlayerChosenTalentWrapper") || !panel.GetParent().BHasClass(talentLevel))
+    {
+        return true;
+    }
+
+    // un-highlight this panel
+    panel.RemoveClass( "Target" );
+    return true;
+}
+
+function OnDragEnterTalent(panel, draggedPanel)
+{
+    let talentLevel = draggedPanel.GetAttributeString("talent_level", "")
+    if (talentLevel == null || talentLevel == "") {
+        return true
+    }
+
+    if (panel == null || !panel.BHasClass("PlayerChosenTalentWrapper") || !panel.GetParent().BHasClass(talentLevel))
+    {
+        return true;
+    }
+
+    // highlight this panel as a drop target
+    panel.AddClass( "Target" );
+    return true;
+}
+
+function OnDragDropTalent(panel, draggedPanel)
+{
+    let talentLevel = draggedPanel.GetAttributeString("talent_level", "") || "";
+    if (talentLevel == null || talentLevel == "") {
+        draggedPanel.DeleteAsync( 0 );
+        return true
+    }
+    
+    if (panel == null || !panel.BHasClass("PlayerChosenTalentWrapper") || !panel.GetParent().BHasClass(talentLevel))
+    {
+        draggedPanel.DeleteAsync( 0 );
+        return true;
+    }
+
+    let talentName = draggedPanel.GetAttributeString("talent_name", "") || "";
+
+    let panelSlot = panel.FindChildrenWithClassTraverse("PlayerChosenTalent")
+
+    if (panelSlot != null && panelSlot != undefined && panelSlot.length > 0) {
+        let slotName = ""
+
+        if (panelSlot[0].BHasClass("PlayerTalentLeft")) {
+            slotName = "left"
+        } else if (panelSlot[0].BHasClass("PlayerTalentRight")) {
+            slotName = "right"
+        }
+
+        PickTalent(talentName, talentLevel, slotName)
+    }
+
+    draggedPanel.DeleteAsync( 0 );
+    return true;
+}
+
+function OnDragEndTalent(panel, draggedPanel)
+{
+    // kill the display panel
+    draggedPanel.DeleteAsync( 0 );
+
+    // restore our look
+    panel.RemoveClass( "Dragged" );
+    return true;
+}
+
+function UpdateTimer()
+{
+
+    let selectionInfo = CustomNetTables.GetTableValue( "selection_info", "0" );
+
+    if (selectionInfo == null || selectionInfo == undefined) {
+        return;
+    }    
+
+    let currentPhase = selectionInfo["select_phase"];
+    let time = selectionInfo["time"] || 0;
+
+    //time on client is 1s smaller to block selecting hero for players when real time is 1.
+    let clientTime = time - 1
+    
+    if ( currentPhase != undefined)
+    {
+        if (currentPhase == 0 && clientTime >= 0) {
+            $( "#StartGameCounterLabel" ).text = clientTime
+
+            if (clientTime > 0) {
+                $.Schedule(0.1, UpdateTimer);
+            }
+        }
+
+        if ((currentPhase == 0 && clientTime < 1) || currentPhase > 0) {
+            BlockHeroSelecting()
+        }
+
+        if (currentPhase == 1) {
+            $( "#StartGameCounterLabel" ).text = 0
+            $("#StartGameCountdownTimer").style.washColor = "#ff6d68";
+            $("#StartGameCounterLabelLocked").SetHasClass("Visible", true);
+        }
+    }
+
+    if (clientTime <= 3) {
+        $("#StartGameCountdownTimer").style.washColor = "#ff6d68";
+    }
+    
+    if (clientTime <= 0) {      
+        $("#StartGameCounterLabelLocked").SetHasClass("Visible", true);
+    }
+}
+
+function SwitchArtifactsProgressInfo()
+{
+    let info = $("#ArtifactSpecialInfoSourceWrapper")
+
+    if (info !== null) {
+        info.ToggleClass("Visible")
+    }
+}
+
+function ScreenResolutionChecker()
+{
+    if (Game.GameStateIsAfter( DOTA_GameState.DOTA_GAMERULES_STATE_HERO_SELECTION)) {
+        return;
+    }
+
+    let abilityContainer = $("#AbilityOptionsContainerRoot")
+    let talentContainer = $("#TalentsWrapperMain")
+    let heroPickList = $("#HeroPickList")
+    let heroOrderPick = $("#AbilityPickingOrderWrapper")
+
+    let proportion = Game.GetScreenWidth() / Game.GetScreenHeight()
+
+    if (proportion < 1.5) {
+        //4:3
+        if (abilityContainer != null) {
+            abilityContainer.SetHasClass("Screens4_3", true)
+            abilityContainer.SetHasClass("Screens16_10", false)
+        }
+
+        if (talentContainer != null) {
+            talentContainer.SetHasClass("Screens4_3", true)
+            talentContainer.SetHasClass("Screens16_10", false)
+        }
+
+        if (heroPickList != null) {
+            heroPickList.SetHasClass("Screens4_3", true)
+            heroPickList.SetHasClass("Screens16_10", false)
+        }
+
+        if (heroOrderPick != null) {
+            heroOrderPick.SetHasClass("Screens4_3", true)
+            heroOrderPick.SetHasClass("Screens16_10", false)
+        }
+
+    } else if (proportion <= 1.65) {
+        //16:10
+
+        if (abilityContainer != null) {
+            abilityContainer.SetHasClass("Screens16_10", true)
+            abilityContainer.SetHasClass("Screens4_3", false)
+        }
+
+        if (talentContainer != null) {
+            talentContainer.SetHasClass("Screens16_10", true)
+            talentContainer.SetHasClass("Screens4_3", false)
+        }
+
+        if (heroPickList != null) {
+            heroPickList.SetHasClass("Screens16_10", true)
+            heroPickList.SetHasClass("Screens4_3", false)
+        }
+
+        if (heroOrderPick != null) {
+            heroOrderPick.SetHasClass("Screens16_10", true)
+            heroOrderPick.SetHasClass("Screens4_3", false)
+        }
+    } else {
+        //16:9
+        if (abilityContainer != null) {
+            abilityContainer.SetHasClass("Screens16_10", false)
+            abilityContainer.SetHasClass("Screens4_3", false)
+        }
+
+        if (talentContainer != null) {
+            talentContainer.SetHasClass("Screens16_10", false)
+            talentContainer.SetHasClass("Screens4_3", false)
+        }
+
+        if (heroPickList != null) {
+            heroPickList.SetHasClass("Screens16_10", false)
+            heroPickList.SetHasClass("Screens4_3", false)
+        }
+
+        if (heroOrderPick != null) {
+            heroOrderPick.SetHasClass("Screens16_10", false)
+            heroOrderPick.SetHasClass("Screens4_3", false)
+        }
+    }
+
+    $.Schedule(1, ScreenResolutionChecker)
+}
+
+var CLEAR_MULTICAST_VALUE_SCHEDULER = null;
+
+function PlayOgreBoostAnimation(multicast, noLongAnimation)
+{
+    if (CLEAR_MULTICAST_VALUE_SCHEDULER != null) {
+        $.CancelScheduled(CLEAR_MULTICAST_VALUE_SCHEDULER)
+        CLEAR_MULTICAST_VALUE_SCHEDULER = null
+    }
+
+    let boostLabel = $("#SpellBoosterMulticastValue")
+
+    if (boostLabel != null) {
+        boostLabel.SetHasClass("Visible", true)
+    }
+
+    if (multicast == 3) {
+        $("#MultiCastParticle").ReloadScene()
+
+        $("#SpellBoosterOgreMagi").FireEntityInput("ogre_3", "StartGestureOverride", "ACT_DOTA_CAST_ABILITY_3")
+
+        if (!noLongAnimation) {  
+            $.Schedule(1.5, function() {
+                $("#SpellBoosterOgreMagi").FireEntityInput("ogre_3", "SetActivityModifier", "ti10_taunt")
+                $("#SpellBoosterOgreMagi").FireEntityInput("ogre_3", "StartGestureOverride", "ACT_DOTA_TAUNT_STATUE")
+            })
+        }
+
+        Game.EmitSound("OgreSpellBooster.X3")
+
+        if (boostLabel != null) {
+            boostLabel.text = "x" + multiCastBoost3x
+            boostLabel.style.color = "red"
+        }
+
+    } else if (multicast == 2) {
+        $("#MultiCastParticle").ReloadScene()
+        $("#SpellBoosterOgreMagi").FireEntityInput("ogre_3", "StartGestureOverride", "ACT_DOTA_CAST_ABILITY_4")
+
+        Game.EmitSound("OgreSpellBooster.X2")
+
+        if (boostLabel != null) {
+            boostLabel.text = "x" + multiCastBoost2x
+            boostLabel.style.color = "orange"
+        }
+
+    } else if (multicast == 1) {
+        $("#MultiCastParticle").ReloadScene()
+        $("#SpellBoosterOgreMagi").FireEntityInput("ogre_3", "StartGestureOverride", "ACT_DOTA_CAST_ABILITY_5")
+
+        Game.EmitSound("OgreSpellBooster.X1")
+
+        if (boostLabel != null) {
+            boostLabel.text = "x" + multiCastBoost1x
+            boostLabel.style.color = "yellow"
+        }
+    }
+
+    CLEAR_MULTICAST_VALUE_SCHEDULER = $.Schedule(1.25, function(){
+        if (boostLabel != null) {
+            boostLabel.SetHasClass("Visible", false)
+        }
+
+        CLEAR_MULTICAST_VALUE_SCHEDULER = null;
+    })
+}
+
+(function()
+{
+    let abilityContext = $("#PlayersWrapperMain")
+    // Drag and drop handlers ( also requires 'draggable="true"' in your XML, or calling panel.SetDraggable(true) )
+    $.RegisterEventHandler( 'DragStart',abilityContext, OnDragStart );
+    $.RegisterEventHandler( 'DragEnter',abilityContext, OnDragEnter );
+    $.RegisterEventHandler( 'DragLeave',abilityContext, OnDragLeave );
+    $.RegisterEventHandler( 'DragDrop',abilityContext, OnDragDrop );
+    $.RegisterEventHandler( 'DragEnd',abilityContext, OnDragEnd );
+
+    let talentContext = $("#AbilityTalentsWrapper")
+
+    $.RegisterEventHandler( 'DragEnter',talentContext, OnDragEnterTalent );
+    $.RegisterEventHandler( 'DragDrop',talentContext, OnDragDropTalent );
+    $.RegisterEventHandler( 'DragLeave',talentContext, OnDragLeaveTalent );
+    $.RegisterEventHandler( 'DragStart',talentContext, OnDragStartTalent );
+    $.RegisterEventHandler( 'DragEnd',talentContext, OnDragEndTalent );
+
+    $.RegisterForUnhandledEvent("DOTAShowAbilityTooltip", OnAbilityTooltipHeroSelection);
+    $.RegisterForUnhandledEvent("DOTAHUDShowHeroStatBranchTooltip", OnTalentTreeTooltip);
+
+    UpdatePotentialHeroPicks();
+    ManageHeroAndAbilitySelection();
+    UpdateAvailableAbilities();
+
+    ScreenResolutionChecker();
+
+    if (Players.GetMaxPlayers() > 10) {
+        let playersCount = 0
+
+        for (let index = 0; index < Players.GetMaxPlayers(); index++) {         
+            if (Players.IsValidPlayerID(index)) {
+                playersCount++;
+            }
+        }
+        
+        if (playersCount > 14) {
+            $("#TeamsPartyContainerRoot").SetHasClass("ManyPlayers", true)
+            $("#AbilityOptionsContainerRoot").SetHasClass("ManyPlayers", true)
+            MANY_PLAYERS_GAME = true
+        }
+    }
+})();

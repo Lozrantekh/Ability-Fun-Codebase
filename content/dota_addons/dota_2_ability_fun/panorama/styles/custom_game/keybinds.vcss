@@ -1,0 +1,379 @@
+/* Prettified by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io */
+
+#PlayerCustomKeyBindRoot
+{
+    horizontal-align:center;
+    vertical-align: bottom;
+    margin-bottom: 150px;
+    transform: translateY(75px);
+    transition-property: transform, opacity;
+    transition-duration: 0.2s;
+    opacity: 0;
+}
+
+#PlayerCustomKeyBindRoot.Visible
+{
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#PlayerCustomKeyBindRoot.NoSpells
+{
+    margin-bottom: 200px;
+}
+
+#CustomKeyBindsEmpty
+{
+    vertical-align: top;
+    horizontal-align:center;
+    color:white;
+    visibility: collapse;
+    padding: 5px;
+    border:2px solid rgb(175, 175, 175);
+}
+
+#PlayerCustomKeyBindRoot.NoSpells #CustomKeyBindsEmpty
+{
+    visibility: visible;
+}
+
+#CustomKeyBindWrapperContent
+{
+    flow-children: right;
+}
+
+.CustomKeyBindRoot
+{
+    width: 70px;
+    height: 70px;
+    padding: 0;
+    margin:0 2px;
+    vertical-align: center;
+    background-color: #3d3d3d;
+    overflow: noclip;
+    margin-top: 20px;
+}
+
+.CustomKeyBindRoot.Hidden
+{
+    opacity: 0;
+    visibility: collapse;
+}
+
+#CustomKeyBindLabelWrapper
+{
+    border:2px solid #979797;
+    width: 100%;
+    height: 100%;
+    z-index: 500;
+    background-color: #020016;
+    background-image: url("s2r://");
+    background-size: 100%;
+    color: #7d8688;
+    transition-property: background-color, border, color, opacity;
+    transition-duration: 0.16s;
+    transition-timing-function: ease-in-out;
+    z-index: 200;
+    opacity: 0.85;
+}
+
+.CustomKeyBindRoot.SetKeybind #CustomKeyBindLabelWrapper
+{
+    border:4px solid #ff6262;
+}
+
+#CustomKeyBindLabelWrapper.Active
+{
+    animation-name: BackgroundPulse;
+    animation-duration: 1.35s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    background-color: #323836;
+    border: 2px solid #5c9dff;
+    padding-left: 0px;
+    box-shadow: #5c99ff22 0px 0px 8px 0px;
+}
+
+#CustomKeyBindLabel
+{
+    width: 100%;
+    font-size: 18px;
+    font-weight: black;
+    vertical-align: center;
+    horizontal-align:center;
+    text-align: center;
+    color:rgb(255, 255, 255);
+    text-shadow: 0px 0px 10px 6 #2342f3;
+}
+
+#CustomKeyBindLabel.SmallFont
+{
+    font-size: 16px;
+}
+
+#CustomKeyBindLabel.VerySmallFont
+{
+    font-size: 12px;
+}
+
+#CustomKeyBindLabel.BigFont
+{
+    font-size: 22px;
+    font-weight: black;
+}
+
+.CustomKeyBindAbilityImageWrapper
+{
+    z-index: 100;
+    width: 85%;
+    vertical-align: center;
+    horizontal-align: center;
+}
+
+#CustomKeyBindAbilityImage
+{
+    opacity: 1;
+    saturation:1;
+    vertical-align: center;
+    horizontal-align:center;
+    saturation:0;
+}
+
+.CustomKeyBindRoot.SetKeybind #CustomKeyBindAbilityImage
+{
+    saturation: 0.8;
+}
+
+#customKeyBindSlotNumber
+{
+    z-index: 600;
+    width: 100%;
+    padding-top:1px;
+    text-align: center;
+    transform: translateY(-22px);
+    horizontal-align:center;
+    color:rgb(214, 214, 214);
+    text-transform: uppercase;
+    font-size: 16px;
+    border:1px solid transparent;
+    border-top:1px solid rgb(131, 131, 131);
+}
+
+#CustomKeyBindRemove
+{
+    width: 18px;
+    height: 18px;
+    border:1px solidw white;
+    color:#ffffff;
+    z-index: 600;
+    wash-color: #ffb5b5;
+    horizontal-align:right;
+    background-image: url("s2r://panorama/images/control_icons/x_close_filled_png.vtex");
+    background-size: cover;
+    border-radius: 100%;
+    transition-property: wash-color, opacity;
+    transition-duration: 0.2s;
+    margin:4px;
+    opacity: 0;
+    background-color: black;
+}
+
+#CustomKeyBindRemove Label
+{
+    font-size: 18px;
+}
+
+#CustomKeyBindRemove.Visible
+{
+    opacity: 0.5;
+}
+
+#CustomKeyBindRemove:hover
+{
+    wash-color: #ff4444;
+    opacity: 0.75;
+}
+
+#CustomKeyBindQuickCastWrapper
+{
+    width: 100%;
+    horizontal-align:left;
+    vertical-align: bottom;
+    z-index: 600;
+}
+
+#CustomKeyBindQuickCast Label
+{
+    font-size: 14px;
+    color:rgb(219, 219, 219);
+    margin-top: -2px;
+    margin-left: 5px;
+    text-transform: uppercase;
+}
+
+#CustomKeyBindQuickCastImg
+{
+    width: 16px;
+    height: 16px;
+    z-index: 800;
+    vertical-align: middle;
+    horizontal-align:left;
+    margin-left: 5px;
+    margin-top: 1px;
+    opacity:0;
+    z-index: 800;
+}
+
+#CustomKeyBindQuickCastWrapper:hover #CustomKeyBindQuickCastImg
+{
+    saturation:1;
+    opacity:0.5;
+}
+
+#CustomKeyBindQuickCastImg.Active
+{
+    saturation:1.5;
+    opacity:1;
+}
+
+@keyframes 'BackgroundPulse'
+{
+    0%
+    {
+        background-color: #1350a9;
+    }
+    
+    50%
+    {
+        background-color: #021088;
+    }
+    
+    100%
+    {
+        background-color: #1350a9;
+    }
+    
+}
+
+.CustomKeyBindQuickCastLabel
+{
+    vertical-align: bottom;
+    margin-bottom: 5px;
+    margin-left: 28px;
+    font-size: 15px;
+    color:rgb(182, 182, 182);
+}
+
+.QuickCastTickBox
+{
+    vertical-align: bottom;
+    width: 28px;
+    height: 28px;
+    border-width: 0px;
+    background-color: none;
+    box-shadow: none;
+    background-size: 120%;
+    background-position: 50% 50%;
+    background-repeat: no-repeat;
+    z-index: 700;
+}
+
+.QuickCastTickBox.Normal
+{
+    background-image: url("s2r://panorama/images/status_icons/quickcast_off_psd.vtex");
+}
+
+.QuickCastTickBox.KeyDown
+{
+    background-image: url("s2r://panorama/images/status_icons/quickcast_keydown_psd.vtex");
+}
+
+.QuickCastTickBox.KeyUp
+{
+    background-image: url("s2r://panorama/images/status_icons/quickcast_keyup_psd.vtex");
+}
+
+.QuickCastCheckBox.CheckBox.KeyDown .QuickCastCycleHover.ShowKeyDown,.QuickCastCheckBox.CheckBox.KeyUp .QuickCastCycleHover.ShowKeyUp,.QuickCastCheckBox.CheckBox.Normal .QuickCastCycleHover.ShowNormal
+{
+    visibility: visible;
+}
+
+.QuickCastCycleHover
+{
+    visibility: collapse;
+    width: 100%;
+    height: 100%;
+}
+
+.QuickCastDropdownItem
+{
+    flow-children: right;
+    min-height: 40px;
+    width: fit-children;
+    vertical-align: bottom;
+}
+
+.QuickCastDropdownItem Label
+{
+    padding: 0px;
+    vertical-align: center;
+    border: 0px;
+    background-color: #00000000;
+}
+
+.QuickCastDropdownItem Label:hover
+{
+    background-color: #00000000;
+}
+
+DropDownMenu
+{
+    box-shadow: 0px 8px 40px rgba(0, 0, 0, 0.4);
+}
+
+DropDownMenu .QuickCastDropdownItem
+{
+    width: 100%;
+    padding-left: 4px;
+    border-bottom: 1px solid black;
+}
+
+DropDownMenu .QuickCastDropdownItem:hover
+{
+    background-color: #585e62;
+}
+
+.QuickCastControl,.QuickCastControl:enabled:hover:not(:parentdisabled)
+{
+    flow-children: none;
+    horizontal-align: left;
+    background-color: none;
+    background-image: none;
+    width: 300px;
+    box-shadow: none;
+    padding: 0px;
+    background-size: 0px;
+    background-position: 50% 50%;
+    width: fit-children;
+    border: 0px;
+    font-size: 24px;
+    height: 41px;
+    z-index: 1;
+}
+
+.QuickCastControl:hover
+{
+    pre-transform-scale2d: 1.05;
+    brightness: 1.1;
+}
+
+.QuickCastDescription
+{
+    visibility: collapse;
+}
+
+DropDownMenu .QuickCastDescription
+{
+    visibility: visible;
+}
+

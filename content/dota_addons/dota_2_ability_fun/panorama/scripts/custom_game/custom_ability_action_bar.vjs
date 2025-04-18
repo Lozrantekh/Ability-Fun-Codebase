@@ -1,0 +1,67 @@
+"use strict";
+var specialAbilityList = [
+    "seasonal_diretide2020_high_five",
+    "high_five_custom_sb_2023",
+    "summon_mount",
+]
+
+var LastLayoutTimeUpdate = Game.GetGameTime();
+
+function UpdateAbilityList()
+{
+    if (Game.GetGameTime() < LastLayoutTimeUpdate + 0.1) {
+        return
+    }
+
+    LastLayoutTimeUpdate = Game.GetGameTime()
+
+
+    let abilityListPanel = $( "#ability_list" );
+    if ( !abilityListPanel )
+        return;
+
+    abilityListPanel.RemoveAndDeleteChildren();
+
+    let queryUnit = Players.GetLocalPlayerPortraitUnit();
+
+    // update all the panels
+    for ( let i = 0; i < Entities.GetAbilityCount( queryUnit ); ++i )
+    {
+        let abilityIndex = Entities.GetAbility( queryUnit, i );
+        let abilityPanel = null
+
+        if ( abilityIndex == -1 ) {
+            continue;
+        }
+
+        let abilityName = Abilities.GetAbilityName(abilityIndex)
+        if ( abilityName == null ) {
+            continue;
+        }
+
+        if (!specialAbilityList.includes(abilityName)) {
+            continue;
+        }
+
+        // create a new panel
+        abilityPanel = $.CreatePanel( "Panel", abilityListPanel, "" );
+    
+        if (abilityPanel != null) {
+            abilityPanel.BLoadLayout( "file://{resources}/layout/custom_game/custom_ability_action_bar_ability.xml", false, false );
+            abilityPanel.Data().SetAbility( abilityIndex, i, queryUnit, Game.IsInAbilityLearnMode() );
+        }
+    }
+}
+
+(function()
+{
+    LastLayoutTimeUpdate = Game.GetGameTime()
+
+    GameEvents.Subscribe( "dota_portrait_ability_layout_changed", UpdateAbilityList );
+    GameEvents.Subscribe( "dota_player_update_selected_unit", UpdateAbilityList );
+    GameEvents.Subscribe( "dota_player_update_query_unit", UpdateAbilityList );
+
+    UpdateAbilityList(); // initial update
+
+    $.Schedule(2.0, UpdateAbilityList)
+})();

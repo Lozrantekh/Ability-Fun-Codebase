@@ -1,0 +1,351 @@
+"use strict";
+
+$.Msg("game end");
+
+var MANY_PLAYERS_GAME = false; 
+
+(function()
+{   
+    $.RegisterForUnhandledEvent("DOTAHUDShowHeroStatBranchTooltip", OnTalentTreeTooltip);
+
+    if (Players.GetMaxPlayers() > 10) {
+        let playersCount = 0
+
+        for (let index = 0; index < Players.GetMaxPlayers(); index++) {         
+            if (Players.IsValidPlayerID(index)) {
+                playersCount++;
+            }
+        }
+
+        if (playersCount > 14) {
+            let gameSummaryRoot = $("#GameSummaryRoot")
+
+            if (gameSummaryRoot != null) {
+                gameSummaryRoot.SetHasClass("ManyPlayers", true)
+            }
+            
+            MANY_PLAYERS_GAME = true
+
+            let gameEnd = GetHUDPanelByID("GameEnd")
+            if (gameEnd != null) {
+
+                gameEnd.style["height"] = "100%"
+            }
+        }
+    }
+})();
+
+function ShowGameSummary(buttonID) {
+
+    let button = $("#" + buttonID)
+
+    if (button != null) {
+        button.style.visibility = "collapse"
+    }
+
+    let victoryLabelContainer = GetHUDPanelByID("WinLabelContainer")
+    if (victoryLabelContainer != null) {
+        victoryLabelContainer.style.visibility = "collapse";
+    }
+
+    let continueButton = GetHUDPanelByID("ContinueButton")
+    if (continueButton != null) {
+        continueButton.style.marginBottom = "0";
+    }
+
+    let gameEndContainer = GetHUDPanelByID("GameEnd")
+    if (gameEndContainer != null){
+        gameEndContainer.hittest = false
+    }
+
+    $.GetContextPanel().RemoveAndDeleteChildren();
+
+    let summaryGameRoot = $.CreatePanel('Panel', $.GetContextPanel(), 'GameSummaryRoot');
+
+    if (summaryGameRoot == null ) {
+        return;
+    }
+
+    summaryGameRoot.SetHasClass("ManyPlayers", MANY_PLAYERS_GAME)
+
+    summaryGameRoot.BLoadLayoutSnippet('GameSummaryMain');
+    
+    let maxPlayers = Players.GetMaxPlayers()
+
+    for (let index = 0; index < maxPlayers; index++) {
+        const playerID = index;
+
+        if (!Players.IsValidPlayerID(playerID)) {
+            continue;
+        }
+
+        let heroEntity = Players.GetPlayerHeroEntityIndex( playerID )
+        if (heroEntity == null) {
+            continue;
+        }
+
+        let playerStats = CustomNetTables.GetTableValue( "players_info", playerID.toString() );
+
+        if (typeof(playerStats) == "null" || typeof(playerStats) == "undefined" ) {
+            continue;
+        }
+
+        
+        //PlayerName
+        let playerName = ""
+        let accountID = -1
+
+        let playerInfo = Game.GetPlayerInfo(playerID);
+
+        if (playerInfo != null) {
+            playerName = playerInfo["player_name"]
+
+            if (typeof(playerInfo["player_steamid"]) != "undefined") {
+                accountID = GetPlayerSteamAccountIDBySteamID(playerInfo["player_steamid"])
+            }
+        }
+
+        // //Patreon
+        // let isPatreon = (playerStats["patronLevel"] != null && playerStats["patronLevel"] != undefined && playerStats["patronLevel"] >= 1);
+        // let patronLevel = playerStats["patronLevel"] || 0;
+
+        let totalDamageString = GetPrettyNumber(playerStats["dealtDamage"]["total"] || 0);
+        let totalDamageReceivedString = GetPrettyNumber(playerStats["receivedDamage"]["total"] || 0);
+        let kills = GetPrettyNumber(playerStats["kills"] || 0);
+        let assists = GetPrettyNumber(playerStats["assists"] || 0);
+        let deaths = GetPrettyNumber(playerStats["deaths"] || 0);
+        let lastHits = GetPrettyNumber(playerStats["last_hits"] || 0);
+        let denies = GetPrettyNumber(playerStats["denies"] || 0);
+        let gpm = GetPrettyNumber(Math.round(playerStats["gold_per_m"]) || 0);
+        let xpm = GetPrettyNumber(Math.round(playerStats["xp_per_m"]) || 0);
+        let net = GetPrettyNumber(playerStats["net_worth"] || 0) 
+
+        let mmr = playerStats["mmr"] || 0;
+        let mmrChange = playerStats["mmr_change"] || 0;
+
+        let openedTreasures = playerStats["upgrade_treasures_opened"] || 0;
+
+        let team = Players.GetTeam( playerID)
+        let heroID = Players.GetSelectedHeroID( playerID)
+        let heroName = $.Localize("#" + Players.GetPlayerSelectedHero( playerID ))
+
+        let summaryPlayerRows = summaryGameRoot.FindChildTraverse("SummaryPlayersRowsRadiant");
+
+        if (team == DOTATeam_t.DOTA_TEAM_BADGUYS) {
+            summaryPlayerRows = summaryGameRoot.FindChildTraverse("SummaryPlayersRowsDire");
+        }
+
+
+        if (summaryPlayerRows != null ) {
+
+            let playerRow = $.CreatePanel('Panel', summaryPlayerRows, '');
+            playerRow.SetHasClass("SummaryPlayerRow", true);
+            playerRow.BLoadLayoutSnippet('PlayerSummarySet');
+
+            let playerHeroImage = playerRow.FindChildrenWithClassTraverse("PlayerHeroImage")
+            if (playerHeroImage != null && playerHeroImage.length > 0) {
+                playerHeroImage[0].heroid = heroID
+            }
+
+            let playerNameLabel = playerRow.FindChildrenWithClassTraverse("PlayerName")
+            if (playerNameLabel != null && playerNameLabel.length > 0) {
+                playerNameLabel[0].text = playerName
+            }
+
+
+            let playerHeroNameLabel = playerRow.FindChildrenWithClassTraverse("HeroName")
+            if (playerHeroNameLabel != null && playerHeroNameLabel.length > 0) {
+                playerHeroNameLabel[0].text = heroName
+            }
+
+            let mmrLabel = playerRow.FindChildrenWithClassTraverse("PlayerMMR")
+            if (mmrLabel != null && mmrLabel.length > 0)
+            {
+                let mmrChangeText = " <font color='lime'>+" + mmrChange + "</font>"
+
+                if (mmrChange < 0) {
+                    mmrChangeText = " <font color='red'>" + mmrChange + "</font>"
+                }
+
+                mmrLabel[0].text = mmr + mmrChangeText
+            }
+
+            let tree = playerRow.FindChildrenWithClassTraverse("PlayerBaseTreeTalentImage")
+
+            if (playerHeroNameLabel != null && playerHeroNameLabel.length > 0)
+            {
+                tree[0].SetAttributeString("hero_id", heroID)
+                tree[0].SetAttributeString("player_id", playerID)
+                tree[0].SetAttributeString("account_id", accountID)
+
+                tree[0].SetPanelEvent("onmouseover", function(){
+                    ShowBaseHeroTreeTalents("", tree[0]);
+                })
+
+                tree[0].SetPanelEvent("onmouseout", function(){
+                   $.DispatchEvent("DOTAHUDHideStatBranchTooltip")
+                })
+            }
+
+            let playerAbilitiesWrapper = playerRow.FindChildrenWithClassTraverse("PlayerSelectedAbilities")
+            if (playerAbilitiesWrapper != null && playerAbilitiesWrapper.length > 0) {
+
+
+                let pickedAbilities = CustomNetTables.GetTableValue( "players_ability_picks_2", accountID );
+
+                if (accountID <= 0 || pickedAbilities == null) {
+                    pickedAbilities =  CustomNetTables.GetTableValue( "players_ability_picks", playerID.toString());
+                }
+
+                if (pickedAbilities !== null) {
+            
+                    let pickedAbilitiesData = Object.values(pickedAbilities)
+
+                    for (let index = 0; index < pickedAbilitiesData.length; index++) {
+                        const abilityData = pickedAbilitiesData[index];
+                        const abilityName = abilityData["ability_name"] || ""; 
+
+                        if ( abilityName != ""){
+                            let abilityPanel = $.CreatePanel("DOTAAbilityImage", playerAbilitiesWrapper[0], "");
+
+                            if (abilityPanel != null) {
+                                abilityPanel.abilityname = abilityName,
+                                abilityPanel.SetHasClass("PlayerSelectedAbility", true)
+                                abilityPanel.hittest = true
+
+                                abilityPanel.SetPanelEvent("onmouseover", function () {
+                                    $.DispatchEvent("DOTAShowAbilityTooltip", abilityPanel, abilityName);
+                                });
+                        
+                                abilityPanel.SetPanelEvent("onmouseout", function () {
+                                    $.DispatchEvent("DOTAHideAbilityTooltip");
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            let playerItemsWrapper = playerRow.FindChildrenWithClassTraverse("PlayerItems")
+            if (playerItemsWrapper != null && playerItemsWrapper.length > 0) {
+                
+                for (let index = 0; index < 6; index++) {
+                    let itemID = Entities.GetItemInSlot( heroEntity, index )
+                    let itemName = Abilities.GetAbilityName( itemID )
+                        
+                        let item = $.CreatePanel("DOTAItemImage", playerItemsWrapper[0], "");
+
+                        item.itemname = itemName,
+                        item.SetHasClass("PlayerItem", true)
+
+                        if (item != null && itemName == "") {
+                            item.SetImage("s2r://panorama/images/items/emptyitembg_png.vtex")
+                        }
+                }
+            }
+
+            //Neutral Item
+            let playerNeutralItemWrapper = playerRow.FindChildrenWithClassTraverse("PlayerNeutralItemWrapper")
+            if (playerNeutralItemWrapper != null && playerNeutralItemWrapper.length > 0) {
+                let itemID = Entities.GetItemInSlot( heroEntity, 16 )
+                let itemName = Abilities.GetAbilityName( itemID )
+
+                let item = $.CreatePanel("DOTAItemImage", playerNeutralItemWrapper[0], "");
+
+                item.itemname = itemName,
+                item.SetHasClass("PlayerNeutralItem", true)
+
+                if (item != null && itemName == "") {
+                    item.SetImage("s2r://panorama/images/items/emptyitembg_png.vtex")
+                }
+            }
+
+            //Golden Treasures Opened
+            let treasuresOpened = playerRow.FindChildrenWithClassTraverse("OpenedGoldenTreasures")
+            if (treasuresOpened != null && treasuresOpened.length > 0) {
+                treasuresOpened[0].text = openedTreasures
+            }
+
+            //Kills
+            let killsLabel = playerRow.FindChildrenWithClassTraverse("KillsSummary")
+            if (killsLabel != null && killsLabel.length > 0) {
+                killsLabel[0].text = kills
+            }
+
+            //Assists
+            let assistsLabel = playerRow.FindChildrenWithClassTraverse("AsistsSummary")
+            if (assistsLabel != null && assistsLabel.length > 0) {
+                assistsLabel[0].text = assists
+            }
+
+            //Deaths
+            let deathsLabel = playerRow.FindChildrenWithClassTraverse("DeathsSummary")
+            if (deathsLabel != null && deathsLabel.length > 0) {
+                deathsLabel[0].text = deaths
+            }
+
+            //Net
+            let netLabel = playerRow.FindChildrenWithClassTraverse("NetSummary")
+            if (netLabel != null && netLabel.length > 0) {
+                netLabel[0].text = net
+            }
+            
+            //Last hits
+            let lastHitLabels = playerRow.FindChildrenWithClassTraverse("LastHitsSummary")
+            if (lastHitLabels != null && lastHitLabels.length > 0) {
+                lastHitLabels[0].text = lastHits
+            }
+
+            //Denies
+            let deniesLabel = playerRow.FindChildrenWithClassTraverse("DeniesSummary")
+            if (deniesLabel != null && deniesLabel.length > 0) {
+                deniesLabel[0].text = denies
+            }
+
+            //GPM
+            let gpmLabel = playerRow.FindChildrenWithClassTraverse("GPMSummary")
+            if (gpmLabel != null && gpmLabel.length > 0) {
+                gpmLabel[0].text = gpm
+            }
+
+            //XPM
+            let xpmLabel = playerRow.FindChildrenWithClassTraverse("XPMSummary")
+            if (xpmLabel != null && xpmLabel.length > 0) {
+                xpmLabel[0].text = xpm
+            }
+
+            //Dealt Damage
+            let damagePhysicalLabel = playerRow.FindChildrenWithClassTraverse("DamageDealtSummary")
+
+            if (damagePhysicalLabel != null && damagePhysicalLabel.length > 0) {
+                damagePhysicalLabel[0].text = totalDamageString
+            }
+                
+            //Taken Damage
+            let damagePhysicalTakenLabel = playerRow.FindChildrenWithClassTraverse("DamageTakenSummary")
+
+            if (damagePhysicalTakenLabel != null && damagePhysicalTakenLabel.length > 0) {
+                damagePhysicalTakenLabel[0].text = totalDamageReceivedString
+            }
+        }
+    }
+
+    //Add Join Patreon Panel
+    // let patronPanel = summaryGameRoot.FindChildTraverse("SummaryPatronsRows");
+    
+    // if (patronPanel != null ) {
+    //  let joinPatronPanel = $.CreatePanelWithProperties("DOTAScenePanel", patronPanel, "", 
+    //                                                  {
+    //                                                      hittest: "true", 
+    //                                                      class :"PatronInfoWrapper",
+    //                                                      onactivate :"BrowserGoToURL('https://www.patreon.com/dota2keymillo')"
+    //                                                  } 
+    //  );
+
+    //  joinPatronPanel.BLoadLayoutSnippet('PatronJoinInfo');
+    // }
+}
+
+function GetPrettyNumber(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}

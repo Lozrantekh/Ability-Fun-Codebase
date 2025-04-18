@@ -1,0 +1,398 @@
+/* Prettified by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io */
+
+@define TotalLength: 30s;
+@define TimingFunc: linear;
+@define IterationCount: 1;
+.AbilityDraftLoadingRoot
+{
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    overflow: clip;
+    opacity: 1;
+}
+
+#GameModeDescription
+{
+    font-size: 27px;
+    text-transform: uppercase;
+    color: #cccccc;
+}
+
+#GameModeHints
+{
+    margin: 10px;
+    font-size: 18px;
+    color: #8f9092;
+}
+
+#GameModeImage
+{
+    horizontal-align: center;
+    width: 200px;
+    height: 150px;
+    box-shadow: inset black 5px 5px 10px 10px;
+}
+
+#TitlePanel
+{
+    horizontal-align: center;
+    vertical-align: bottom;
+    margin-right: 20px;
+    flow-children: right;
+}
+
+#DungeonIcon
+{
+    width: 80px;
+    height: 80px;
+    vertical-align: center;
+    margin-right: 15px;
+}
+
+#DungeonTitle
+{
+    margin-bottom: -15px;
+    vertical-align: center;
+    text-transform: uppercase;
+    font-size: 80px;
+    color: #cccccc;
+    text-shadow: 2px 2px 2px #000000;
+}
+
+.SeqImg
+{
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-size: 100% 100%;
+}
+
+.SeqBg
+{
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    background-size: 100% 100%;
+}
+
+#seq
+{
+    overflow: clip;
+    pre-transform-scale2d: 1.35, 1.35;
+}
+
+#SplashArtcontainer
+{
+    width: 1920px;
+    height: 1080px;
+    overflow: noclip;
+}
+
+#SplashArt
+{
+    width: 100%;
+    height: 100%;
+    background-image: url("s2r://panorama/images/loading_screen_png.vtex");
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-img-opacity:0.85;
+    background-color: black;
+}
+
+@keyframes 'ScrollSplash'
+{
+    0%
+    {
+        transform: scaleX(-1) translateX(0px);
+        wash-color: red;
+    }
+    
+    100%
+    {
+        transform: scaleX(-1) translateX(-150px);
+        wash-color: white;
+    }
+    
+}
+
+.CampaignTitle
+{
+    font-size: 96px;
+    letter-spacing: 3px;
+    color: white;
+    color: gradient( linear, 0% 0%, 0% 100%, from( #ACC7CE ), color-stop( .3, #123038 ), color-stop( .3, #123038 ), color-stop( .8, #08536A ), to( #04FFD4 ) );
+    padding: 16px;
+    padding-right: 4px;
+    padding-bottom: 0px;
+    horizontal-align: center;
+    text-align: center;
+}
+
+.TitleFx
+{
+    horizontal-align: left;
+}
+
+.CampaignTitle.Rim
+{
+    transform: translateX(-1px) translateY(1px);
+    text-shadow: 0px 0px 2px 2.0 #000;
+    color: gradient( linear, 0% 0%, 0% 100%, from( #ACC7CE ), color-stop( .2, #08536A ), to( #04FFD4 ) );
+}
+
+.CampaignTitle.Glow
+{
+    color: transparent;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-out;
+}
+
+.CampaignTitle.Glow1
+{
+    text-shadow: 0px -2px 6px 1 black;
+}
+
+.CampaignTitle.Glow2
+{
+    text-shadow: 0px -6px 12px 1 black;
+}
+
+.CampaignTitle.Glow3
+{
+    text-shadow: 0px -12px 18px 1 black;
+}
+
+.CampaignTitle.Glow4
+{
+    text-shadow: 0px -18px 26px 1 black;
+}
+
+#TopPanelsWrapper
+{
+    flow-children:right;
+}
+
+#PlayerLoadingStatusRoot
+{
+    max-width: 1022px;
+    min-width: 605px;
+    margin-left: 25px;
+    vertical-align: bottom;
+    horizontal-align:left;
+    flow-children:right-wrap;
+    margin-bottom: 25px;
+    padding: 10px 0 0 10px;
+    border:4px solid rgba(209, 255, 166, 0.432);
+    box-shadow: 0px 0px 2px 2px #3d3d3de5;
+    border-radius: 10px;
+    background-color: #000000bd;
+    visibility: collapse;
+}
+
+#PlayerLoadingStatusRoot.Visible
+{
+    visibility: visible;
+}
+
+.PlayerLoadingStatus
+{
+    flow-children:down;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    background-image: url("s2r://panorama/images/hud/passive_ability_border_down_png.vtex");
+    background-size: 100%;
+    padding: 15px;
+    padding-bottom: 10px;
+    box-shadow: 0px 4px 10px #0000006b;
+}
+
+.PlayerLoadingStatus.Connected
+{
+    background-color: rgba(84, 223, 84, 0.24);
+}
+
+.PlayerLoadingAvatarWrapper
+{
+    width: 85px;
+    height: 85px;
+    horizontal-align:center;
+    border-radius: 100%;
+}
+
+.PlayerLoadingAvatarRing
+{
+    width: 100%;
+    height: 100%;
+    background-image: url("s2r://panorama/images/events/aghanim/blessing_icons/blessing_icon_frame_dim_glow_psd.vtex");
+    background-size: 103%;
+    background-position: 50% 0%;
+    z-index: 200;
+    wash-color:rgb(1, 7, 0);
+}
+
+#PlayerLoadingAvatar
+{
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    opacity: 0.75;
+    saturation:0.75;
+}
+
+.PlayerLoadingStatus.Connected #PlayerLoadingAvatar
+{
+    opacity: 1;
+    saturation:1;
+}
+
+#PlayerLoadingName
+{
+    margin-top: 10px;
+    width: 85px;
+    height: 20px;
+    horizontal-align:center;
+    color:white;
+    opacity: 0.25;
+    max-height: 25px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.PlayerLoadingStatus.Connected #PlayerLoadingName
+{
+    opacity: 1;
+}
+
+.LoadingIcon
+{
+    width: 90px;
+    height: 90px;
+    vertical-align: middle;
+    background-image: url("s2r://panorama/images/loading_icon_png.vtex");
+    background-repeat: no-repeat;
+    background-size: 100%;
+    horizontal-align: center;
+    z-index: 200;
+    animation-name: rotating2;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-timing-function:linear;
+    brightness:1.15;
+}
+
+.PlayerLoadingStatus.Connected .LoadingIcon
+{
+    visibility: collapse;
+}
+
+#RightPanelInfoWrapper
+{
+    width: 600px;
+    margin-left: 25px;
+    flow-children:down;
+    margin-top: 75px;
+    padding: 30px;
+    padding-left: 35px;
+    opacity-mask: url("s2r://panorama/images/masks/scratched_box_psd.vtex") 0.85;
+    border-radius: 20px;
+    box-shadow: fill #141414 0px 0px 2px 5px;
+    background-color: #5f5d5af1;
+    border:4px solid rgb(255, 255, 255);
+}
+
+#AnnouncementsTitleWrapper
+{
+    flow-children:right;
+    margin-bottom: 20px;
+}
+
+.AnnouncementsImage
+{
+    width: 110px;
+}
+
+#RightPanelInfoLabel
+{
+    font-size: 50px;
+    margin-left: 10px;
+    color:rgb(238, 238, 238);
+    horizontal-align:center;
+    vertical-align: center;
+    margin-bottom: 10px;
+    text-shadow: 0px 4px 2px 2.5 #000000;
+}
+
+.RightPanelInfoText
+{
+    font-style: italic;
+    color:pink;
+    text-shadow: 0px 0px 3px 3.0 #000000;
+    font-size: 20px;
+}
+
+#RightPanelInfoContents
+{
+    flow-children:down;
+    horizontal-align:center;
+}
+
+.SupporterLink
+{
+    width: 150px;
+    height: 50px;
+    vertical-align: center;
+    horizontal-align:center;
+    text-align: center;
+    border-bottom: 0;
+    margin-top: 10px;
+    margin-bottom:5px;
+    background-image: url("s2r://panorama/images/discord_png.vtex");
+    background-position: 50%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    pre-transform-scale2d: 0.95;
+    transition-property: pre-transform-scale2d, brightness, saturation;
+    transition-duration: 0.25s;
+    transition-timing-function: ease-in-out;
+}
+
+.SupporterLink:hover
+{
+    pre-transform-scale2d: 1.1;
+}
+
+.PlayersLoadingChat
+{
+    width: 100%;
+    margin-left: 30px;
+    vertical-align: bottom;
+}
+
+.DungeonGameSetupChat
+{
+    width: 500px;
+    vertical-align: bottom;
+    horizontal-align:right;
+}
+
+#Chat
+{
+    width: 100%;
+    horizontal-align:center;
+    padding-left: 5%;
+}
+
+@keyframes 'rotating2'
+{
+    0%
+    {
+        pre-transform-rotate2d:0deg;
+    }
+    
+    100%
+    {
+        pre-transform-rotate2d:360deg;
+    }
+    
+}
+

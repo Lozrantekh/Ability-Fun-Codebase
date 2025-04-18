@@ -1,0 +1,822 @@
+"use strict";
+CustomNetTables.SubscribeNetTableListener( "custom_key_binds", UpdateKeyBindSlot )
+GameEvents.Subscribe( "recreate_hotkeys", ForceRecreatingHotKeys );
+
+var AbilitySlot = -1; //This is main key here
+var AbilityNumber = -1
+var IsCosmeticAbility = false
+var SlotKeyBind = null;
+var SlotOriginalKeyBind = null;
+var SlotQuickCastStats = 0;
+var IsQuickCastPressButton = true
+var QuickCastMouseActivated = false
+var AbilityRangeQuickCast = null
+
+var WaitingUser = false;
+var KeyBindSet = false;
+var LastCommandName = "";
+
+function SetKeyBindSlot(abilitySlot, abilityIndex, counter, isCosmetic)
+{
+    AbilitySlot = abilitySlot
+    AbilityNumber = counter
+    IsCosmeticAbility = isCosmetic
+
+    let abilityName = Abilities.GetAbilityName( abilityIndex );
+    $( "#CustomKeyBindAbilityImage" ).abilityname = abilityName;
+
+    let queryUnit = Players.GetLocalPlayerPortraitUnit();
+    SlotOriginalKeyBind = Abilities.GetKeybind( abilityIndex, queryUnit );
+
+    //is keybind already set? (HUD changed)
+    let customKeyBind = GetAbilitySlotCustomKeyBind()
+
+    if (customKeyBind !== null && customKeyBind !== "") {
+        // $.Msg("ustawiam custom keybind dla: ", abilityName)
+        SetCustomKeyBind(customKeyBind, false)
+    }
+
+    UpdateKeyBindSlot()
+}
+
+function ForceRecreatingHotKeys()
+{
+    let customKeyBind = GetAbilitySlotCustomKeyBind()
+
+    if (customKeyBind !== null && customKeyBind !== "") {
+        SetCustomKeyBind(customKeyBind, false)
+    }
+
+    GameEvents.SendCustomGameEventToServer("hotkeys_recreated", {player_id : Game.GetLocalPlayerID()});
+}
+
+function UpdateKeyBindSlot()
+{
+    let keyBind = ""
+    let customKeyBind = GetAbilitySlotCustomKeyBind()
+
+    if (customKeyBind !== null && customKeyBind !== "") {
+        keyBind = customKeyBind
+    }
+
+    SlotKeyBind = customKeyBind
+
+    let keyBindShowName = GetKeyBindShowName(keyBind.toLowerCase())
+
+    $("#CustomKeyBindLabel").text = keyBindShowName.toUpperCase()
+
+    SetKeyBindLabelStyle(keyBindShowName, $("#CustomKeyBindLabel"))
+
+    if (keyBind !== "") {
+        $.GetContextPanel().FindChildTraverse("CustomKeyBindRemove").SetHasClass("Visible", true)
+        $.GetContextPanel().SetHasClass("SetKeybind", true)
+    } else {
+        $.GetContextPanel().FindChildTraverse("CustomKeyBindRemove").SetHasClass("Visible", false)
+        $.GetContextPanel().SetHasClass("SetKeybind", false)
+    }
+
+    //update hotkey on ability panel
+    if (!IsCosmeticAbility) {
+        let allUsedKeybinds = GetAllUsedCustomKeyBinds()
+
+        if (SlotOriginalKeyBind == null || allUsedKeybinds.includes(SlotOriginalKeyBind.toLowerCase()) || keyBind !== "") {
+            let abilitiesPanel = $.GetContextPanel().Data().GetHUDPanelByID("AbilitiesAndStatBranch")
+    
+            if (abilitiesPanel != null) {
+                let abilityPanel = abilitiesPanel.FindChildTraverse("Ability" + AbilityNumber)
+        
+                if (abilityPanel != null) {
+                    let hotKey = abilityPanel.FindChildTraverse("HotkeyText")
+                    if (hotKey != null) {
+                        hotKey.text = keyBindShowName
+        
+                        if (keyBindShowName === "") {
+                            hotKey.GetParent().style["visibility"] = "collapse"
+                        } else {
+                            hotKey.GetParent().style["visibility"] = "visible"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function UpdateKeyBindSlotAbilityIndex(abilityIndex, abilityNumber)
+{
+    let previousAbilityNumber = AbilityNumber
+    if (typeof(previousAbilityNumber) == "undefined" || typeof(previousAbilityNumber) == "null") {
+        return
+    }
+
+    let abilityName = Abilities.GetAbilityName( abilityIndex );
+    AbilityNumber = abilityNumber
+
+    $( "#CustomKeyBindAbilityImage" ).abilityname = abilityName;
+
+    UpdateKeyBindSlot()
+
+    //check if other panel has this keybind (can happen if new abilities are added)
+
+    let customKeyBind = GetAbilitySlotCustomKeyBind()
+    let keyBindShowName = GetKeyBindShowName(customKeyBind.toLowerCase())
+
+    if (previousAbilityNumber != AbilityNumber && customKeyBind !== null && customKeyBind !== "") {
+        let abilityContainer = $.GetContextPanel().Data().GetHUDPanelByID("AbilitiesAndStatBranch")
+
+        if (abilityContainer != null) {
+            let abilitiesPanel = abilityContainer.FindChildTraverse("abilities")
+
+            if (abilitiesPanel != null) {
+                let element = abilitiesPanel.GetChild(previousAbilityNumber);
+    
+                if (element != null) {
+                    let hotKey = element.FindChildTraverse("HotkeyText")
+        
+                    if (hotKey != null && hotKey.text.toLowerCase() == keyBindShowName.toLowerCase()) {
+                        hotKey.text = ""
+                        hotKey.GetParent().style["visibility"] = "collapse"
+                    }
+                }
+            }
+        }
+    }
+}
+
+function GetAllCurentlyUsedCustomKeyBinds()
+{
+    let result = []
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        keybindsData["all_registered_keybinds"] = null
+
+        let data = Object.values(keybindsData)
+
+        for (let index = 0; index < data.length; index++) {
+            const slotData = data[index];
+
+            if (slotData !== null) {
+                for (const key in slotData) {
+                    if (key !== null && key === "key_bind") {
+                        result.push(slotData[key].toLowerCase())
+                    }
+                }
+            }
+        }
+    }
+
+    return result
+}
+
+function BindRootActivate()
+{
+    $("#CustomKeyBindLabelWrapper").SetFocus()
+    $("#CustomKeyBindLabelWrapper").SetHasClass("Active", true)
+
+    UpdateKeyBindSlot()
+}
+
+function BindRootBlur()
+
+{
+    $("#CustomKeyBindLabelWrapper").SetHasClass("Active", false)
+
+    if(WaitingUser && !KeyBindSet) {
+        $.GetContextPanel().Data().HideExtraPlayerInfo()
+        
+        let label = $("#CustomKeyBindLabel")
+        if (label == null) {
+            return
+        }
+        
+        label.text = ""
+    } 
+
+    if (!KeyBindSet) {
+        UpdateKeyBindSlot()
+    }
+}
+
+function IsValidKeyBind(key)
+{
+    if (Object.keys(PanoramaKeyToServerKey).includes(key.toLowerCase()))
+    {
+        return true
+    }
+
+    if (Object.values(PanoramaKeyToServerKey).includes(key.toLowerCase()))
+    {
+        return true
+    }
+
+    return false
+}
+
+function HasSlotCustomKeyBind()
+{
+    UpdateKeyBindSlot()
+
+    if (SlotKeyBind !== null && SlotKeyBind !== "") {
+        return true
+    }
+
+    return false
+}
+
+function GetAbilitySlotCustomCommandShowName()
+{
+    if (AbilitySlot === null || AbilitySlot === -1) {
+        return ""
+    }
+
+    let commandName = ""
+    let showCommandName = ""
+
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        if (keybindsData[AbilitySlot] == null ) {
+            return ""
+        }
+
+        if (keybindsData[AbilitySlot]["new_command_name"] != null) {
+            commandName = keybindsData[AbilitySlot]["new_command_name"]
+        }
+
+        if (keybindsData[AbilitySlot]["new_command_name_tooltip"] != null) {
+            showCommandName =  keybindsData[AbilitySlot]["new_command_name_tooltip"]
+        }
+    }
+
+    if (showCommandName == null || showCommandName == ""){
+        showCommandName = commandName
+    }
+
+    return showCommandName
+}
+
+function GetAbilityNameInSlot(customAbilitySlot)
+{
+    if (customAbilitySlot === null || customAbilitySlot == -1) {
+        return ""
+    }
+
+    let queryUnit = Players.GetLocalPlayerPortraitUnit();
+
+    if (queryUnit == null) {
+        return ""
+    }
+
+    let abilityIndex = Entities.GetAbility( queryUnit, customAbilitySlot)
+
+    if (Abilities.IsAttributeBonus(abilityIndex)) {
+        return ""
+    }
+
+    if (abilityIndex == null || abilityIndex == -1) {
+        return ""
+    }
+
+    let abilityName = Abilities.GetAbilityName( abilityIndex )
+
+    if (abilityName == null || abilityName.includes("special_bonus")) {
+        return ""
+    }
+
+    let abilityLabel = "#DOTA_Tooltip_ability_" + abilityName
+
+    try {
+        abilityLabel = $.Localize(abilityLabel)
+    } catch (error) {
+        
+    }
+
+    return abilityLabel
+}
+
+function GetAllUsedCustomKeyBinds()
+{   
+    let result = []
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        if (keybindsData["all_registered_keybinds"] == null ) {
+            return []
+        }
+
+        let keys =  Object.keys(keybindsData["all_registered_keybinds"])
+
+        for (let index = 0; index < keys.length; index++) {
+            const element = keys[index];
+            
+            result.push(element.toLowerCase())
+        }
+    }
+
+    return result
+}
+
+function GetAbilitySlotCustomKeyBind()
+{
+    if (AbilitySlot === null || AbilitySlot === -1) {
+        return ""
+    }
+    
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null) {
+
+        if (keybindsData[AbilitySlot] == null || keybindsData[AbilitySlot]["key_bind"] == null ) {
+            return ""
+        }
+
+        return keybindsData[AbilitySlot]["key_bind"]
+    }
+
+    return ""
+}
+
+function GetCustomCommandNameForKeybind(keybind)
+{
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        for (const slotNumber in keybindsData) {
+            let slotData = keybindsData[slotNumber]
+            
+            if (slotData !== null) {
+                for (const key in slotData) {
+                    if (key !== null && key == "key_bind" && slotData["key_bind"] !== null && slotData["key_bind"].toLowerCase() === keybind.toLowerCase()) {
+
+                        if (slotData["new_command_name"] != null) {
+                            return slotData["new_command_name"]
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return ""
+}
+
+function GetCommandUserShowName(commandName)
+{
+    let result = commandName
+    let showCustomCommandName = GetAbilitySlotCustomCommandShowName()
+
+    if (showCustomCommandName !== null && showCustomCommandName !== "") {
+        result = showCustomCommandName
+    }
+
+    try {
+        result = $.Localize("#" + result)
+    } catch (error) {
+    }
+
+    if (result.startsWith("#")) {
+        result = result.slice(1)
+    }
+
+    result = result.replace("DOTA_KEYBIND_", "")
+    result = result.replaceAll("_", " ")
+
+    return result
+}
+
+function CheckKeyBindUsage(keyToCheck)
+{
+    KeyBindSet = false
+
+    if (keyToCheck == null || keyToCheck == undefined) {
+        return
+    }
+
+    let label = $("#CustomKeyBindLabel")
+    if (label == null) {
+        return
+    }
+
+    if (WaitingUser && (keyToCheck != "enter" && keyToCheck != "escape"))
+    {
+        WaitingUser = false
+    }
+
+    let lastKeyCheck = label.text
+
+    if (WaitingUser && lastKeyCheck != "enter" && lastKeyCheck != "escape" && IsValidKeyBind(lastKeyCheck))
+    {
+        if (keyToCheck == "enter") {
+            KeyBindSet = true
+
+            SetCustomKeyBind(lastKeyCheck, true)
+        }
+
+        if (keyToCheck == "escape")
+        {
+            label.text = "";
+            $.GetContextPanel().Data().HideExtraPlayerInfo()
+            UpdateKeyBindSlot()
+            $.DispatchEvent("DropInputFocus"); 
+        }
+
+        WaitingUser = false
+
+        return
+
+    } else if (WaitingUser && !IsValidKeyBind(lastKeyCheck)) {
+        $.GetContextPanel().Data().UpdatePlayerExtraInfo(
+            {
+                text:"HotKey <font color='red'><b>" + lastKeyCheck.toUpperCase() + " </b></font> Is Not Allowed.",
+                duration: 5,
+                key_bind_info : true,
+            }
+        )
+
+        WaitingUser = false
+        return
+    }
+
+    if (keyToCheck == "escape" || keyToCheck == "enter") {
+        $("#CustomKeyBindLabelWrapper").SetHasClass("Active", false)
+        $.DispatchEvent("DropInputFocus"); 
+
+        return
+    }
+
+    let keyBindShowName = GetKeyBindShowName(keyToCheck.toLowerCase())
+    label.text = keyToCheck.toUpperCase()
+
+    SetKeyBindLabelStyle(keyBindShowName, label)
+
+    let commandName = GetCustomCommandNameForKeybind(keyToCheck)
+    let checkedAbilitySlot = GetAbilitySlotFromCustomKeybind(keyToCheck)
+
+    // //modified keybinds will not back to theirs original behaviors (even when custom function will be removed) but Dota still think they work.
+    if (commandName == null || commandName == "") {
+        let registeredKeyBind = keyToCheck
+
+        let allUsedKeyBinds = GetAllUsedCustomKeyBinds()
+        
+        if (!allUsedKeyBinds.includes(registeredKeyBind.toLowerCase())) {
+            commandName = GetOriginalCommandNameForKeyBind(keyToCheck)
+
+            checkedAbilitySlot = GetAbilitySlotFromOriginalCommandName(commandName)
+        }
+    }
+
+    if (commandName !== null && commandName !== "" && commandName !== -1) {
+        LastCommandName = commandName
+
+        let showCommandName = GetCommandUserShowName(commandName)
+
+        if (checkedAbilitySlot !== -1) {
+            let abilityNameInSlot = GetAbilityNameInSlot(checkedAbilitySlot)
+
+            if (abilityNameInSlot != "") {
+                showCommandName = "Execute " + abilityNameInSlot
+            } else {
+                showCommandName = "Execute " + showCommandName
+            }
+        }
+
+        if (showCommandName == null || showCommandName == "") {
+            showCommandName = commandName
+        }
+
+        $.GetContextPanel().Data().UpdatePlayerExtraInfo(
+            {
+                text:"HotKey: <font color='#2bbcff'><b>" + keyBindShowName.toUpperCase() + "</b></font>" + " Is Used For: <font color='gold'>" + showCommandName.toUpperCase() + 
+                        "</font>. Press <font color='orange'><b><i>ENTER</i></b></font> To Overrite / <font color='lime'><b><i>ESCAPE</i></b></font> To Cancel." + 
+                        "<br><br><font color='red'><b>WARNING: </b></font>Used Keybinds After Deletion <font color='pink'><b>WILL NOT</b></font> Back To Previous Behaviors And <font color='pink'><b>CANNOT BE</b></font> Reused In DOTA Settings Until Next Game!" +
+                        "<br>Set Keybinds Are Stored On Server When Game Ends.",
+                duration: 9999,
+                key_bind_info : true,
+                key_bind_warning : true,
+            }
+        )
+
+        WaitingUser = true
+
+        return
+    }
+
+    if (IsValidKeyBind(keyToCheck) ) {
+        KeyBindSet = true
+
+        SetCustomKeyBind(keyToCheck, true)
+
+        WaitingUser = false
+        return
+    }
+
+    WaitingUser = false
+}
+
+function SetKeyBindLabelStyle (keyBindShowName, label)
+{
+    if (keyBindShowName.length >= 9) {
+        label.SetHasClass("VerySmallFont", true)
+        label.SetHasClass("SmallFont", false)
+        label.SetHasClass("BigFont", false)
+    } else if (keyBindShowName.length >= 6) {
+        label.SetHasClass("SmallFont", true)
+        label.SetHasClass("VerySmallFont", false)
+        label.SetHasClass("BigFont", false)
+    } else if (keyBindShowName.length == 1) {
+        label.SetHasClass("BigFont", true)
+        label.SetHasClass("VerySmallFont", false)
+        label.SetHasClass("SmallFont", false)
+    } else {
+        label.SetHasClass("VerySmallFont", false)
+        label.SetHasClass("SmallFont", false)
+        label.SetHasClass("BigFont", false)
+    }
+}
+
+function SetCustomKeyBind(keyBind, informPlayer)
+{
+    if (AbilitySlot == -1) {
+        return;
+    }
+
+    //current base keybind (only from dota 2 settings)
+    let queryUnit = Players.GetLocalPlayerPortraitUnit();
+    let abilityIndex = Entities.GetAbility( queryUnit, AbilitySlot)
+    let originalKeybind = Abilities.GetKeybind( abilityIndex )
+
+    //clear original keybind event
+    let allSetCustomKeybinds = GetAllCurentlyUsedCustomKeyBinds()
+
+    if (allSetCustomKeybinds === null || !allSetCustomKeybinds.includes(originalKeybind.toLowerCase())) {
+        Game.CreateCustomKeyBind(originalKeybind, "");
+    }
+    
+    //clear current custom keybind (if exists)
+    if(SlotKeyBind !== null && SlotKeyBind !== "") {
+        Game.CreateCustomKeyBind(SlotKeyBind.toUpperCase(), "");
+    }
+
+    let serverKeybind = keyBind
+    if (PanoramaKeyToServerKey[keyBind.toLowerCase()] !== undefined && PanoramaKeyToServerKey[keyBind.toLowerCase()] !== "") {
+        serverKeybind = PanoramaKeyToServerKey[keyBind.toLowerCase()]
+    }
+
+    let newCommandName = $.GetContextPanel().Data().MakeRandomString(6, "execute_ability_" + AbilitySlot + "_" + serverKeybind.toUpperCase());
+    let newCommandShowName = "Execute Ability " + Number(AbilitySlot + 1)
+    
+    if (AbilitySlotsCommmandName[AbilitySlot] != null) {
+        newCommandShowName = AbilitySlotsCommmandName[AbilitySlot]
+    }
+
+    //need key release event for quickcast type 2 (onKeyUp)
+    Game.CreateCustomKeyBind(serverKeybind.toUpperCase(), newCommandName);
+
+    let abilityName = Abilities.GetAbilityName( abilityIndex)
+    let isToggleMapAbility = false
+
+    if (abilityName != null && abilityName == "open_map_ability_sb_2023") {
+        isToggleMapAbility = true
+    }
+
+    if (isToggleMapAbility) {
+        let localPlayer = Game.GetLocalPlayerID()
+        Game.AddCommand(newCommandName, function(){GameEvents.SendCustomGameEventToServer( "toggle_map", {"player_id":localPlayer});}, "", 0);
+    } else {
+        Game.AddCommand(newCommandName, function(){ExecuteAbility(AbilitySlot)}, "", 0);
+    }
+    
+    let data = {
+        player_id: Game.GetLocalPlayerID(),
+        ability_slot: AbilitySlot,
+        key_bind: keyBind.toLowerCase(),
+        original_key_bind: originalKeybind,
+        new_command_name: newCommandName,
+        new_command_name_tooltip: newCommandShowName,
+        org_command_name: GetOriginalCommandNameForKeyBind(originalKeybind),
+    }
+
+    GameEvents.SendCustomGameEventToServer("custom_key_bind_set", data);
+
+    if (!informPlayer) {
+        return;
+    }
+
+    try {
+        newCommandShowName = $.Localize("#" + newCommandShowName)
+    } catch (error) {
+        
+    }
+
+    if (newCommandShowName.startsWith("#")) {
+        newCommandShowName = "Execute " + GetAbilityNameInSlot(AbilitySlot)
+    }
+
+    let keyBindShowName = GetKeyBindShowName(keyBind.toLowerCase())
+
+    $.GetContextPanel().Data().UpdatePlayerExtraInfo(
+        {
+            text:"HotKey: <font color='#2bbcff'><b>" + keyBindShowName.toUpperCase() + "</b></font> Was Set For: <font color='gold'>" + newCommandShowName.toUpperCase() + "</font>",
+            duration: 2,
+            key_bind_info : true,
+            key_bind_set : true,
+        }
+    )
+
+    $("#CustomKeyBindLabelWrapper").SetHasClass("Active", false)
+
+    $.DispatchEvent("DropInputFocus"); 
+}
+
+function ExecuteAbility(unitAbilitySlot)
+{
+    let queryUnit = Players.GetLocalPlayerPortraitUnit();
+    let abilityIndex = Entities.GetAbility( queryUnit, unitAbilitySlot )
+    
+    Abilities.ExecuteAbility( abilityIndex, queryUnit, false )
+}
+
+function GetOriginalCommandNameForKeyBind(keyToCheck)
+{
+    if (keyToCheck == null || keyToCheck == "") {
+        return ""
+    }
+
+    for (const key in Keybinds) {
+
+        if (typeof(key) == "undefined" || key == undefined || key == "undefined") {
+            continue;
+        }
+        
+        let isnum = /^\d+$/.test(key);
+
+        if (!isnum) {
+            continue;
+        }
+
+        let keyNumber = Number(key)
+        const name = Keybinds[key];
+
+        let commandKeyBind = Game.GetKeybindForCommand(keyNumber) 
+
+        if (commandKeyBind == null || commandKeyBind == keyNumber) {
+            continue;
+        }
+
+        if (commandKeyBind.toLowerCase() == keyToCheck.toLowerCase()) {
+            return name
+        }
+    }
+
+    return ""
+}
+
+function GetKeyBind(name) {
+    //name - name of the command, for example: LearnStats
+    let contextPanel = $.GetContextPanel()
+
+    let keyElement = $.CreatePanelWithProperties('DOTAHotkey', contextPanel, "", {
+        keybind: name,
+        
+    });
+    
+    let key = keyElement.GetChild(0).text
+    
+    keyElement.DeleteAsync(0);  
+    return key
+}
+
+function GetAbilitySlotFromOriginalCommandName(commandName)
+{
+    let abilityName = commandName.split("DOTA_KEYBIND_ABILITY_").pop();
+
+    abilityName = abilityName.replace("_QUICKCAST", "")
+
+    if (abilityName == "ULTIMATE") {
+        return 5
+    }
+
+    if (abilityName.includes("PRIMARY") && isNumeric(abilityName.split("PRIMARY").pop())) {
+        return Number(abilityName.split("PRIMARY").pop()) - 1
+    }
+
+    if (abilityName.includes("SECONDARY") && isNumeric(abilityName.split("SECONDARY").pop())) {
+        return Number(abilityName.split("SECONDARY").pop()) + 2
+    }
+
+    return -1
+}
+
+function GetAbilitySlotFromCustomKeybind(keybind)
+{
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        for (const slotNumber in keybindsData) {
+            let slotData = keybindsData[slotNumber]
+            
+            if (slotData !== null) {
+                for (const key in slotData) {
+                    if (key !== null && key == "key_bind" && slotData[key] !== null && slotData[key].toLowerCase() === keybind.toLowerCase()) {
+
+                        if (isNumeric(slotNumber)) {
+                            return Number(slotNumber)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return -1
+}
+
+function GetAbilitySlotCustomCommand()
+{
+    if (AbilitySlot === null || AbilitySlot === -1) {
+        return ""
+    }
+
+    let keybindsData = CustomNetTables.GetTableValue( "custom_key_binds", Game.GetLocalPlayerID().toString() );
+    if (keybindsData != null && keybindsData != undefined) {
+
+        if (keybindsData[AbilitySlot] == null ) {
+            return ""
+        }
+
+        if (keybindsData[AbilitySlot]["new_command_name"] != null) {
+            return keybindsData[AbilitySlot]["new_command_name"]
+        }
+    }
+
+    return ""
+}
+
+function RemoveCustomKeyBind()
+{
+    let data = {
+        player_id: Game.GetLocalPlayerID(),
+        ability_slot: AbilitySlot,
+        key_bind : SlotKeyBind,
+    }
+
+    //remove custom keybind
+    GameEvents.SendCustomGameEventToServer("custom_key_bind_removed", data);
+
+    let keybindShowName = SlotKeyBind
+    if (SlotKeyBind != null) {
+        keybindShowName = GetKeyBindShowName(SlotKeyBind)
+    } else {
+        keybindShowName = ""
+    }
+    
+    $.GetContextPanel().Data().UpdatePlayerExtraInfo(
+        {
+            text:"Custom HotKey: <font color='#2bbcff'><b>" + keybindShowName + "</b></font> Was Removed.",
+            duration: 2,
+            key_bind_info : true,
+            key_bind_set : true,
+        }
+    )
+
+    Game.CreateCustomKeyBind(SlotKeyBind.toUpperCase(), "");
+
+    if (!IsCosmeticAbility) {
+        let abilitiesPanel = $.GetContextPanel().Data().GetHUDPanelByID("AbilitiesAndStatBranch")
+        if (abilitiesPanel != null) {
+            let abilityPanel = abilitiesPanel.FindChildTraverse("Ability" + AbilityNumber)
+    
+            if (abilityPanel != null) {
+                let hotKey = abilityPanel.FindChildTraverse("HotkeyText")
+                if (hotKey != null) {
+                    hotKey.text = ""
+                }
+            }
+        }
+    }
+        
+    //back focus to keybinds container
+    $.DispatchEvent("DropInputFocus"); 
+    $("#CustomKeyBindLabelWrapper").SetHasClass("Active", false)
+}
+
+function isNumeric(str) {
+    return !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+           !isNaN(parseFloat(str)) // ...and ensure strings of whitespace fail
+}
+
+(function() {
+    //Register Commands only on Panel to bind keys
+    for (const key in PanoramaKeyToServerKey) {
+        try {
+            $.RegisterKeyBind($("#CustomKeyBindLabelWrapper"), 'key_' + key.toUpperCase(), function(){CheckKeyBindUsage(key)});
+        } catch (error) {
+            $.Msg(error)
+        }
+    }
+
+    $.GetContextPanel().Data().SetKeyBindSlot = SetKeyBindSlot;
+    $.GetContextPanel().Data().UpdateKeyBindSlotAbilityIndex = UpdateKeyBindSlotAbilityIndex;
+    $.GetContextPanel().Data().HasSlotCustomKeyBind = HasSlotCustomKeyBind;
+    $.GetContextPanel().Data().GetAbilitySlotCustomKeyBind = GetAbilitySlotCustomKeyBind;
+})();

@@ -1,0 +1,163 @@
+"use strict";
+
+CustomNetTables.SubscribeNetTableListener( "player_spell_upgrades", UpdatePlayerGoldenTreasureCount )
+CustomNetTables.SubscribeNetTableListener( "players_info", UpdatePlayersInfoInGame)
+
+GameEvents.Subscribe( "find_ability_localizations", FindAbilityLocalizations);
+GameEvents.Subscribe( "show_ability_upgrades", ShowAbilityUpgrades);
+GameEvents.Subscribe( "hide_ability_upgrades", HideBootsUpgrade);
+
+function FindAbilityLocalizations(data)
+{
+    let result = []
+
+    let abilityName = data["ability_name"] || ""
+
+    if (abilityName == undefined || abilityName == "") {
+        return;
+    }
+
+    let upgradesList = data["data"]
+
+    if (upgradesList == undefined){
+        return
+    }
+
+    let abilityArray = Object.values(upgradesList)
+
+    for (let index = 0; index < abilityArray.length; index++) {
+        const abilityData = abilityArray[index];
+        let propertyWithTooltipExt = false;
+
+        let abilityName = abilityData["ability_name"] || "";
+        let abilityTooltip = abilityData["ability_tooltip_name"] || "";
+        let abilityPropertyName = abilityData["ability_property"] || "";
+        let abilityTooltipPropertyName = abilityData["ability_tooltip_property_name"] || "";
+
+        if (abilityTooltip != "" && !$.Localize(abilityData["ability_tooltip"]).includes("#DOTA_Tooltip_")) {
+         
+            if (abilityTooltipPropertyName == "" || abilityPropertyName == "" || abilityName == "") {
+                continue;
+            }
+
+            let description = $.Localize(abilityTooltipPropertyName)
+            let tooltTipLocalized = true
+
+            if (description.includes("#DOTA_Tooltip_")) {
+                tooltTipLocalized = false
+
+                let tooltip = $.Localize(abilityTooltipPropertyName + "_tooltip")
+
+                if (!tooltip.includes("#DOTA_Tooltip_")) {
+                    description = tooltip
+                    propertyWithTooltipExt = true
+                }
+            }
+        
+            result.push(
+                {
+                    "ability_property" : abilityPropertyName, 
+                    "tooltip_localized": tooltTipLocalized, 
+                    "tooltip_ext" : propertyWithTooltipExt,
+                    "description" : description
+                }
+            )
+        }   
+    }
+
+    GameEvents.SendCustomGameEventToServer( "ability_upgrades_localizated", {"ability_name" : abilityName, "upgrades" : result, "player_id" : Game.GetLocalPlayerID()});
+}
+
+function UpdatePlayerGoldenTreasureCount()
+{
+    
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}
+
+function ShowAbilityUpgrades(data) {
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}
+
+function ChooseAbilityReward(rewardID)
+{
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}
+
+function RerollAbilityUpgrades()
+{
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    GameEvents.SendCustomGameEventToServer( "ability_upgrades_reroll", { "player_id" : playerID});
+    Game.EmitSound("Reroll.Base")
+}
+
+function HideBootsUpgrade(data)
+{
+    BootsUpgradeChosen = true
+    let panel = $( "#BootsReward" )
+    panel.SetHasClass( "Visible", false);
+}
+
+function OpenAbilityRewardsChoice()
+{
+    let panel = $( "#AbilityRewardsMainWrapper" )
+    
+    if (panel == null) {
+        return;
+    }
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}
+
+//Empty function to block clicks on Reward Panel (hittest="true" for some reason doesn't work)
+function OnAbilityRewardClick()
+{
+    let panel = $( "#AbilityRewardsMainWrapper" )
+    
+    if (panel == null) {
+        return;
+    }
+
+    panel.SetFocus()
+}
+
+function OnAbilityRewardBlur()
+{
+    let panel = $( "#AbilityRewardsMainWrapper" )
+    
+    if (panel == null) {
+        return;
+    }
+
+    panel.SetHasClass("Visible", false)
+}
+
+function UpdatePlayersInfoInGame()
+{
+    UpdateSupporterAbilitySkipCounter()
+}
+
+function UpdateSupporterAbilitySkipCounter()
+{
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}
+
+function AbilityRewardToggle(rewardID)
+{
+    let localPlayer = Game.GetLocalPlayerID()
+    GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":1});
+    Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+}

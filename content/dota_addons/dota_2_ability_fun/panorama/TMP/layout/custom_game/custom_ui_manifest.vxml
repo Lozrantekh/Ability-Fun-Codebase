@@ -1,0 +1,12 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/config.vjs_c" />
+    </scripts>
+    <Panel>
+        <CustomUIElement type="HeroSelection" layoutfile="s2r://panorama/layout/custom_game/hero_selection.vxml_c" />
+        <CustomUIElement type="PregameStrategy" layoutfile="s2r://panorama/layout/custom_game/hud_pre_game.vxml_c" />
+        <CustomUIElement type="Hud" layoutfile="s2r://panorama/layout/custom_game/hud_main.vxml_c" />
+        <CustomUIElement type="EndScreen" layoutfile="s2r://panorama/layout/custom_game/game_complete.vxml_c" />
+    </Panel>
+</root>

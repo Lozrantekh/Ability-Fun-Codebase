@@ -1,0 +1,117 @@
+"use strict";
+
+var m_Ability = -1;
+var m_AbilitySlot = -1
+var m_QueryUnit = -1;
+
+function SetAbility( ability, abilitySlot, queryUnit )
+{
+    m_Ability = ability;
+    m_AbilitySlot = abilitySlot
+    m_QueryUnit = queryUnit;
+    
+    $.GetContextPanel().SetHasClass( "no_ability", ( ability == -1 ) );
+
+    UpdateAbility();
+}
+
+function AutoUpdateAbility()
+{
+    UpdateAbility();
+    $.Schedule( 0.1, AutoUpdateAbility );
+}
+
+function UpdateAbility()
+{
+    let abilityButton = $( "#AbilityButton" );
+    let abilityName = Abilities.GetAbilityName( m_Ability );
+
+    let noLevel =( 0 == Abilities.GetLevel( m_Ability ) );
+    let isCastable = !Abilities.IsPassive( m_Ability ) && !noLevel;
+    let manaCost = Abilities.GetManaCost( m_Ability );
+    let hotkey = Abilities.GetKeybind( m_Ability, m_QueryUnit );
+
+    let customHotKey = GetCustomKeybindShowNameForAbilitySlot(m_AbilitySlot)
+    if (customHotKey !== null && customHotKey !== "") {
+        hotkey = customHotKey
+    }
+
+    let unitMana = Entities.GetMana( m_QueryUnit );
+
+    $.GetContextPanel().SetHasClass( "no_level", noLevel );
+    $.GetContextPanel().SetHasClass( "is_passive", Abilities.IsPassive(m_Ability) );
+    $.GetContextPanel().SetHasClass( "no_mana_cost", ( 0 == manaCost ) );
+    $.GetContextPanel().SetHasClass( "insufficient_mana", ( manaCost > unitMana ) );
+    $.GetContextPanel().SetHasClass( "auto_cast_enabled", Abilities.GetAutoCastState(m_Ability) );
+    $.GetContextPanel().SetHasClass( "toggle_enabled", Abilities.GetToggleState(m_Ability) );
+    $.GetContextPanel().SetHasClass( "is_active", ( m_Ability == Abilities.GetLocalPlayerActiveAbility() ) );
+
+    abilityButton.enabled = isCastable;
+    
+    $( "#HotkeyText" ).text = hotkey;
+    
+    $( "#AbilityImage" ).abilityname = abilityName;
+    $( "#AbilityImage" ).contextEntityIndex = m_Ability;
+    
+    $( "#ManaCost" ).text = manaCost;
+    
+    if ( Abilities.IsCooldownReady( m_Ability ) )
+    {
+        $.GetContextPanel().SetHasClass( "cooldown_ready", true );
+        $.GetContextPanel().SetHasClass( "in_cooldown", false );
+    }
+    else
+    {
+        $.GetContextPanel().SetHasClass( "cooldown_ready", false );
+        $.GetContextPanel().SetHasClass( "in_cooldown", true );
+        let cooldownLength = Abilities.GetCooldownLength( m_Ability );
+        let cooldownRemaining = Abilities.GetCooldownTimeRemaining( m_Ability );
+        let cooldownPercent = Math.ceil( 100 * cooldownRemaining / cooldownLength );
+        $( "#CooldownTimer" ).text = Math.ceil( cooldownRemaining );
+        $( "#CooldownOverlay" ).style.width = cooldownPercent+"%";
+    }
+    
+}
+
+function AbilityShowTooltip()
+{
+    let abilityButton = $( "#AbilityButton" );
+    let abilityName = Abilities.GetAbilityName( m_Ability );
+    // If you don't have an entity, you can still show a tooltip that doesn't account for the entity
+    //$.DispatchEvent( "DOTAShowAbilityTooltip", abilityButton, abilityName );
+    
+    // If you have an entity index, this will let the tooltip show the correct level / upgrade information
+    $.DispatchEvent( "DOTAShowAbilityTooltipForEntityIndex", abilityButton, abilityName, m_QueryUnit );
+}
+
+function AbilityHideTooltip()
+{
+    let abilityButton = $( "#AbilityButton" );
+    $.DispatchEvent( "DOTAHideAbilityTooltip", abilityButton );
+}
+
+function ActivateAbility()
+{
+    Abilities.ExecuteAbility( m_Ability, m_QueryUnit, false );
+}
+
+function DoubleClickAbility()
+{
+    // Handle double-click like a normal click - ExecuteAbility will either double-tap (self cast) or normal toggle as appropriate
+    ActivateAbility();
+}
+
+function RightClickAbility()
+{
+    if ( Abilities.IsAutocast( m_Ability ) )
+    {
+        Game.PrepareUnitOrders( { OrderType: dotaunitorder_t.DOTA_UNIT_ORDER_CAST_TOGGLE_AUTO, AbilityIndex: m_Ability } );
+    }
+}
+
+(function()
+{
+    $.GetContextPanel().Data().SetAbility = SetAbility;
+
+    AutoUpdateAbility(); // initial update of dynamic state
+})();

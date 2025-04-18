@@ -1,0 +1,22 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/keybinds.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/custom_key_binding_shared.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/custom_key_binding_bar_slot_v2.vjs_c" />
+    </scripts>
+    <Panel class="CustomKeyBindRoot" hittest="true">
+        <Label id="customKeyBindSlotNumber" text="" />
+        <Panel class="CustomKeyBindAbilityImageWrapper">
+            <DOTAAbilityImage id="CustomKeyBindAbilityImage" />
+        </Panel>
+        <Panel id="CustomKeyBindLabelWrapper" onactivate="BindRootActivate()" onblur="BindRootBlur()">
+            <Label id="CustomKeyBindLabel" text="" hittest="true" />
+        </Panel>
+        <Panel id="CustomKeyBindRemove" hittest="true" onactivate="RemoveCustomKeyBind()" />
+        <Panel id="CustomKeyBindQuickCastWrapper" />
+    </Panel>
+</root>

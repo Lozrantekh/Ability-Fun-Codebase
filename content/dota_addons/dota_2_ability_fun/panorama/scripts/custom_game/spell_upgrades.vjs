@@ -1,0 +1,742 @@
+"use strict";
+
+CustomNetTables.SubscribeNetTableListener( "player_spell_upgrades", UpdatePlayerGoldenTreasureCount )
+CustomNetTables.SubscribeNetTableListener( "players_info", UpdatePlayersInfoInGame)
+
+GameEvents.Subscribe( "find_ability_localizations", FindAbilityLocalizations);
+GameEvents.Subscribe( "show_ability_upgrades", ShowAbilityUpgrades);
+GameEvents.Subscribe( "hide_ability_upgrades", HideBootsUpgrade);
+
+function FindAbilityLocalizations(data)
+{
+    let result = []
+
+    let abilityName = data["ability_name"] || ""
+
+    if (abilityName == undefined || abilityName == "") {
+        return;
+    }
+
+    let upgradesList = data["data"]
+
+    if (upgradesList == undefined){
+        return
+    }
+
+    let abilityArray = Object.values(upgradesList)
+
+    for (let index = 0; index < abilityArray.length; index++) {
+        const abilityData = abilityArray[index];
+        let propertyWithTooltipExt = false;
+
+        let abilityName = abilityData["ability_name"] || "";
+        let abilityTooltip = abilityData["ability_tooltip_name"] || "";
+        let abilityPropertyName = abilityData["ability_property"] || "";
+        let abilityTooltipPropertyName = abilityData["ability_tooltip_property_name"] || "";
+
+        if (abilityTooltip != "" && !$.Localize(abilityData["ability_tooltip"]).includes("#DOTA_Tooltip_")) {
+         
+            if (abilityTooltipPropertyName == "" || abilityPropertyName == "" || abilityName == "") {
+                continue;
+            }
+
+		let description = $.Localize(abilityTooltipPropertyName)
+            let tooltTipLocalized = true
+
+            if (description.includes("#DOTA_Tooltip_")) {
+                tooltTipLocalized = false
+
+                let tooltip = $.Localize(abilityTooltipPropertyName + "_tooltip")
+
+                if (!tooltip.includes("#DOTA_Tooltip_")) {
+					description = tooltip
+                    propertyWithTooltipExt = true
+                }
+            }
+        
+            result.push(
+				{
+					"ability_property" : abilityPropertyName, 
+					"tooltip_localized": tooltTipLocalized, 
+					"tooltip_ext" : propertyWithTooltipExt,
+					"description" : description
+				}
+			)
+        }   
+    }
+
+	GameEvents.SendCustomGameEventToServer( "ability_upgrades_localizated", {"ability_name" : abilityName, "upgrades" : result, "player_id" : Game.GetLocalPlayerID()});
+}
+
+function UpdatePlayerGoldenTreasureCount()
+{
+	let scenePanel = $("#AbilityUpgradeSceneWrapper")
+
+	if (scenePanel == null) {
+		return;
+	}
+
+	let treasuresCount = scenePanel.FindChildTraverse("AbilityUpgradeCountLabel")
+
+	let playerUpgradesData = CustomNetTables.GetTableValue( "player_spell_upgrades", Players.GetLocalPlayer().toString() );
+	if (playerUpgradesData == null || playerUpgradesData["upgrades"] == null || playerUpgradesData["upgrades"]["1"] == null) {
+		$("#AbilityUpgradeSceneWrapper").SetHasClass("Visible", false)
+
+		if(treasuresCount != null) {
+			treasuresCount.text = "x0"
+		}
+		return;
+	}
+
+	let totalTreasureCount = 0
+	let playerAllUpgrades = Object.values(playerUpgradesData["upgrades"])
+
+	if (playerAllUpgrades != null) {
+		totalTreasureCount = playerAllUpgrades.length
+	}
+
+	let playerFirstUpgradeSet = Object.values(playerUpgradesData["upgrades"]["1"]);
+
+	if (playerFirstUpgradeSet == null || playerFirstUpgradeSet.length == 0) {
+		$("#AbilityUpgradeSceneWrapper").SetHasClass("Visible", false)
+
+		if(treasuresCount != null) {
+			treasuresCount.text = "x0"
+		}
+
+		return
+	}
+
+	scenePanel.SetHasClass("Visible", true)
+
+	let awaitingUpgrades = 0
+	let isReroll = false
+
+	let extraInfo = playerUpgradesData["info"]
+	if (extraInfo != null) {
+		awaitingUpgrades = extraInfo["awaiting_upgrades"] || 0
+		isReroll = extraInfo["is_reroll"] || false
+	}
+
+	totalTreasureCount += awaitingUpgrades
+
+	if (treasuresCount != null) {
+		let currentTreasureCount = 0
+		let treasureCountLabel = treasuresCount.text.replace("x","")
+
+		if(treasureCountLabel != null && typeof(Number(treasureCountLabel)) == "number") {
+			currentTreasureCount = Number(treasureCountLabel)
+		}
+
+		if (totalTreasureCount > currentTreasureCount) {
+			let particles = scenePanel.FindChildTraverse("AbilityUpgradeParticles")
+			if (particles != null) {
+				particles.ReloadScene()
+				Game.EmitSound("Treasure.Box.Drop")
+			}
+		}
+
+		treasuresCount.text = "x" + totalTreasureCount
+	}
+
+	let rewardsWrapperPanel = $("#AbilityRewardsWrapper")
+	if (rewardsWrapperPanel == null) {
+		return
+	}
+
+	let chestID = extraInfo["chest_id"] || ""
+	let currentOpenedChestID = rewardsWrapperPanel.GetAttributeString("chest_id", "")
+
+	if (currentOpenedChestID === "" || chestID !== currentOpenedChestID) {
+		let panel = $( "#AbilityRewardsMainWrapper" )
+
+		if (panel.BHasClass("Visible"))
+		{
+			ShowAbilityUpgrades(playerUpgradesData)
+		}
+	}
+}
+
+function ShowAbilityUpgrades(data) {
+	if (data == null || data["upgrades"] == null || data["upgrades"]["1"] == null) {
+		return
+	}
+	//show only 1st list of upgrades (if player has more treasures with spell upgrades)
+	let upgrades = data["upgrades"]["1"]
+	let panel = $( "#AbilityRewardsMainWrapper" )
+
+	let rewardsWrapperPanel = $("#AbilityRewardsWrapper")
+	if (rewardsWrapperPanel == null) {
+		return
+	}
+
+	let abilitySkipAvailableCounter = 0
+	let abilityGoldenUpgradesCounter = 0
+
+    let localPlayer = Game.GetLocalPlayerID()
+	let playerStats = CustomNetTables.GetTableValue( "players_info", localPlayer.toString() );
+
+    if (playerStats != null) {
+        if (typeof(playerStats["skip_ability_upgrades"]) !== "undefined") {
+            abilitySkipAvailableCounter = playerStats["skip_ability_upgrades"]
+        }
+
+		if (typeof(playerStats["ability_golden_upgrades_balance"]) !== "undefined") {
+            abilityGoldenUpgradesCounter = playerStats["ability_golden_upgrades_balance"]
+        }
+    }
+
+    $("#SupporterUpgradeSkipCounter").text = abilitySkipAvailableCounter;
+    $("#AbilityUpgradesGoldenUpgradeCounter").text = abilityGoldenUpgradesCounter;
+
+	let chestID = ""
+	let talentRerolls = 0
+	let isReroll = false
+
+	let extraInfo = data["info"]
+
+	if (extraInfo != null) {
+		chestID = extraInfo["chest_id"] || ""
+		isReroll = extraInfo["is_reroll"] || false
+	}
+
+	rewardsWrapperPanel.SetAttributeString("chest_id", chestID)
+	rewardsWrapperPanel.RemoveAndDeleteChildren()
+	
+	let addedOptions = 0
+	for ( let i in upgrades )	
+	{	
+		let upgradeData = upgrades[i];
+		
+		if (upgradeData == null) {
+			continue;
+		}
+
+		addedOptions += 1
+
+		let rewardID = upgradeData["reward_id"] || 0;
+		let upgradeTitle = upgradeData["title"] || "";
+		let upgradeAbilityName = upgradeData["ability_name"] || "";
+		let upgradePropertyName = upgradeData["property_name"] || "";
+
+		let downgradeAbilityName = upgradeData["icon_downgrade"] || ""
+		let isShardUpgrade = upgradeData["show_shard_info"] || false
+		let isScepterUpgrade = upgradeData["show_scepter_info"] || false
+
+		let upgradeValue = upgradeData["upgrade_value"] || 0;
+		upgradeValue = Math.round(upgradeValue * 100) / 100;
+
+		let minValue = upgradeData["min_value"];
+		let maxValue = upgradeData["max_value"];
+		
+		if (typeof(upgradeData["max_value_client"]) !== "undefined") {
+			maxValue = upgradeData["max_value_client"]
+		}
+
+		if (minValue != null) {
+			minValue = Math.round(minValue * 100) / 100;
+		}
+
+		if (maxValue != null) {
+			maxValue = Math.round(maxValue * 100) / 100;
+		}
+
+		let downgradeValue = upgradeData["downgrade_value"] || 0;
+		let downgradeName = upgradeData["downgrade_name"] || "";
+		let upgradeName = upgradeData["upgrade_name"] || "";
+
+		if (upgradeTitle == "") {
+			upgradeTitle = $.Localize("#DOTA_Tooltip_ability_" + upgradeAbilityName)
+		}
+
+		let isPercent = false
+		let upgradeDescription = ""
+
+		if (upgradeData["description"] != null) {
+			upgradeDescription = upgradeData["description"]
+		} else {
+			upgradeDescription = $.Localize("#Dota_tooltip_ability_" + upgradeAbilityName + "_" + upgradePropertyName)
+		
+			if (upgradeDescription.includes("$")) {
+				upgradeDescription = $.Localize("#dota_ability_variable_" + upgradeDescription.split('$')[1])
+			}
+	
+			if (upgradeDescription.includes("%")) {
+				upgradeDescription = upgradeDescription.replace("%", "")
+				isPercent = true
+			}
+		
+			if (upgradeDescription.includes("#DOTA_Tooltip_ability_" + upgradeAbilityName + "_" + upgradePropertyName)) {
+				upgradeDescription = upgradePropertyName
+				upgradeDescription = upgradeDescription.replace("_", " ")
+			}
+		}
+
+		let isSpecialUpgrade = false;
+		let isMythicalUpgrade = false;
+		let isHotOfferUpgrade = false;
+        let isNewAbility = false;
+		let rewardLevel = upgradeData["reward_level"] || ""
+
+		if (rewardLevel == "special_upgrade") {
+			isSpecialUpgrade = true
+		} else if (rewardLevel != "hot_offers" ) {
+			if (upgradeDescription.includes(":")) {
+				upgradeDescription = upgradeDescription.replace(":", "")
+			}
+		}
+
+		if (rewardLevel == "hot_offers") {
+			upgradeAbilityName = upgradeData["icon_upgrade"]
+		}
+
+		if (rewardLevel == "mythical_upgrade") {
+			isMythicalUpgrade = true
+		}
+
+		if (rewardLevel == "hot_offers") {
+			isHotOfferUpgrade = true
+			upgradeDescription = "+" + upgradeValue + " " + upgradeName + "<br>" + "-" + downgradeValue + " " + downgradeName
+		}
+
+        if (rewardLevel == "new_ability") {
+			isNewAbility = true
+		}
+
+		let upgradeMinus = upgradeData["show_minus"] && (upgradeData["show_minus"] == 1);
+		let upgradeImageItem = upgradeData["is_item"] || false
+
+		//Start Creating Panels:
+		let upgradePanelRoot = $.CreatePanel('Panel', rewardsWrapperPanel, "AbilityRewardContainer_" + rewardID);
+
+		if (upgradePanelRoot == null ) {
+			continue;
+		}
+	
+		upgradePanelRoot.BLoadLayoutSnippet('AbilityRewardRoot');
+		upgradePanelRoot.SetHasClass("AbilityRewardRoot", true)
+		upgradePanelRoot.SetHasClass("Visible", true)
+
+		let buttonPanel = upgradePanelRoot.FindChildrenWithClassTraverse("AbilityRewardButtonPick")
+		if (buttonPanel != null && buttonPanel[0]) {
+			buttonPanel[0].SetPanelEvent("onactivate", function(){
+				ChooseAbilityReward(rewardID)
+			})
+		}
+
+        let skipUpgradeToggleButton = upgradePanelRoot.FindChildrenWithClassTraverse("AbilityRewardToggleButton")
+        if (skipUpgradeToggleButton != null && skipUpgradeToggleButton[0]) {
+
+            if (rewardLevel != "special_upgrade" && rewardLevel != "new_ability") {
+                let skipText = ""
+    
+                if (upgradeData["neutral_item_upgrade"] == 1) {
+                    skipText = "Skip Upgrades For This Item"
+        
+                } else {
+                    skipText = "Skip " + ConvertTextToTitleCase(upgradeDescription.toLowerCase())
+                }
+        
+
+                skipUpgradeToggleButton[0].text = skipText
+
+                skipUpgradeToggleButton[0].SetPanelEvent("onactivate", function(){
+                    AbilityRewardToggle(rewardID)
+                })
+    
+                if (upgradeData["neutral_item_upgrade"] == 1) {
+                    skipUpgradeToggleButton[0].SetHasClass("NeutralItemSkip", true)
+                }
+                skipUpgradeToggleButton[0].GetParent().SetHasClass("Visible", abilitySkipAvailableCounter > 0)
+            } else {
+                skipUpgradeToggleButton[0].GetParent().visible = false
+            }
+        } 
+
+		let upgradePanel = upgradePanelRoot.FindChildrenWithClassTraverse("AbilityRewardContainer")
+		if (upgradePanel == null || upgradePanel[0] == null) {
+			continue;
+		}
+
+		upgradePanel = upgradePanel[0]
+
+		if (isMythicalUpgrade) {
+			upgradePanel.SetHasClass("MythicalAbilityUpgrade", true)	
+		} else {
+			upgradePanel.SetHasClass("MythicalAbilityUpgrade", false)	
+		}
+
+		if (isSpecialUpgrade || isNewAbility) {
+			upgradePanel.SetHasClass("SpecialAbilityUpgrade", true)	
+		} else {
+			upgradePanel.SetHasClass("SpecialAbilityUpgrade", false)	
+		}
+
+		if (isNewAbility) {
+			upgradePanel.SetHasClass("NewAbilityUpgrade", true)
+		} else {
+			upgradePanel.SetHasClass("NewAbilityUpgrade", false)
+		}
+
+		if (isHotOfferUpgrade) {
+			upgradePanel.SetHasClass("HotOfferUpgrade", true)	
+		} else {
+			upgradePanel.SetHasClass("HotOfferUpgrade", false)	
+		}
+
+		let upgradePanelTitle = upgradePanel.FindChildrenWithClassTraverse("AbilityRewardTitle")
+		if (upgradePanelTitle != null && upgradePanelTitle[0] != null) {
+			upgradePanelTitle[0].text = upgradeTitle
+		}
+
+		let upgradePanelImage = upgradePanel.FindChildrenWithClassTraverse("AbilityRewardPicture")
+		if (upgradePanelImage != null && upgradePanelImage[0] != null) {
+			upgradePanelImage[0].RemoveAndDeleteChildren()
+
+			if (upgradeImageItem) {
+				let image = $.CreatePanel("DOTAItemImage", upgradePanelImage[0], "");
+				if (image != null) {
+					image.SetHasClass("AbilityUpgradeImage", true)
+					image.itemname = upgradeAbilityName
+
+					if (isHotOfferUpgrade) {
+						image.SetHasClass("HotOfferUpgradeImage", true)
+						
+						let image2 = $.CreatePanel("DOTAItemImage", upgradePanelImage[0], "");
+						if (image2 != null) {
+							image2.SetHasClass("AbilityUpgradeImage", true)
+							image2.SetHasClass("HotOfferDowngradeImage", true)
+							image2.itemname = downgradeAbilityName
+						}
+					}
+				}
+			} else {
+				let image = $.CreatePanel("DOTAAbilityImage", upgradePanelImage[0], "");
+				if (image != null) {
+					image.SetHasClass("AbilityUpgradeImage", true)
+					image.abilityname = upgradeAbilityName
+				}
+			}
+		}
+
+		let upgradePanelInfo = upgradePanel.FindChildrenWithClassTraverse("AbilityRewardInfo")
+		if (upgradePanelInfo != null && upgradePanelInfo[0] != null) {
+			let labels = upgradePanelInfo[0].FindChildrenWithClassTraverse("AbilityUpgradeLabel")
+
+			if (labels != null && labels[0] != null) {
+				if (isSpecialUpgrade) {
+					labels[0].text = GetSpellUpgradeDescription(upgradeData["upgrade_info"])
+				} else if (rewardLevel == "new_ability") {
+                    labels[0].text = "NEW ABILITY<br><span class='AbilityUpgradeShowNewAbility'>| SHOW ABILITY INFO |</span>"
+
+					labels[0].GetParent().SetPanelEvent("onmouseactivate", function(){
+						$.DispatchEvent("DOTAShowAbilityTooltip", labels[0], upgradeAbilityName);
+					})
+
+					labels[0].GetParent().SetPanelEvent("onmouseout", function(){
+						$.DispatchEvent("DOTAHideAbilityTooltip");
+					})
+				} else {
+                    //fix for items with font colors
+
+					let color = labels[0].style.color
+					if (color != null) {
+						color = "black"
+					}
+
+					upgradeDescription = upgradeDescription.replace(/color='(#[a-zA-Z0-9]+|[a-z]+)'>/, "color='" + color +"'>")
+
+					if (upgradeDescription.startsWith("-") || upgradeDescription.startsWith("+")) {
+						upgradeDescription = upgradeDescription = upgradeDescription.slice(1, upgradeDescription.length)
+					}
+
+					labels[0].text = upgradeDescription
+                }
+			}
+
+			let valueLabels = upgradePanelInfo[0].FindChildrenWithClassTraverse("AbilityUpgradeValue")
+			if (valueLabels != null && valueLabels[0] != null) {
+
+				if (!isSpecialUpgrade && !isHotOfferUpgrade && rewardLevel !== "new_ability") {
+					valueLabels[0].SetHasClass("Hidden", false)
+
+					let sign = "+"
+					if (upgradeMinus) {
+						sign = "-"
+					}
+					
+					upgradeValue = sign + upgradeValue
+					
+					if (isPercent) {
+						upgradeValue += "%"
+					}
+					
+					valueLabels[0].text = upgradeValue
+				} else {
+                    valueLabels[0].SetHasClass("Hidden", true)
+                }
+			}
+
+			let minValueLabel = upgradePanelInfo[0].FindChildrenWithClassTraverse("AbilityUpgradeMinValue") 
+			if (minValueLabel != null && minValueLabel[0] != null) {
+
+				if (minValue != null) {
+					minValueLabel[0].SetHasClass("Hidden", false)
+
+					if (isPercent) {
+						minValue += "%"
+					}
+
+					minValueLabel[0].text = "Min Value: " + "<font color='#f5f0da'>" + minValue + "</font>";
+				} else {
+					minValueLabel[0].SetHasClass("Hidden", true)
+				}
+			}
+
+			let maxValueLabel = upgradePanelInfo[0].FindChildrenWithClassTraverse("AbilityUpgradeMaxValue") 
+			if (maxValueLabel != null && maxValueLabel[0] != null) {
+
+				if (maxValue != null) {
+					maxValueLabel[0].SetHasClass("Hidden", false)
+
+					if (isPercent) {
+						maxValue += "%"
+					}
+
+					maxValueLabel[0].text = "Max Value: " + "<font color='#f5f0da'>" + maxValue + "</font>";
+				} else {
+					maxValueLabel[0].SetHasClass("Hidden", true)
+				}
+			}
+
+			
+			let shardWrapper = upgradePanel.FindChildrenWithClassTraverse("AbilityRewardShardUpgrade")
+
+			if (isShardUpgrade == 1) {
+				if (shardWrapper != null && shardWrapper[0] != null) {
+					shardWrapper[0].SetHasClass("Visible", true)
+				}
+
+			} else {
+				if (shardWrapper != null && shardWrapper[0] != null) {
+					shardWrapper[0].SetHasClass("Visible", false)
+				}
+			}
+
+			let scepterWrapper = upgradePanel.FindChildrenWithClassTraverse("AbilityRewardScepterUpgrade")
+
+			if (isScepterUpgrade == 1) {
+				if (scepterWrapper != null && scepterWrapper[0] != null) {
+					scepterWrapper[0].SetHasClass("Visible", true)
+				}
+
+			} else {
+				if (scepterWrapper != null && scepterWrapper[0] != null) {
+					scepterWrapper[0].SetHasClass("Visible", false)
+				}
+			}
+		}
+
+		// AbilityRewardButtonID
+		let button = upgradePanel.FindChildTraverse("AbilityRewardButtonID" + rewardID)
+		if (button != null ) {
+			button.ClearPanelEvent("onactivate")
+
+			button.SetPanelEvent("onactivate", function(){
+				ChooseAbilityReward(rewardID);
+			})
+		}
+	}
+
+	if (addedOptions < 4) {
+		rewardsWrapperPanel.SetHasClass( "SmallerContent", true);
+	} else {
+		rewardsWrapperPanel.SetHasClass( "SmallerContent", false);
+	}
+
+	panel.SetHasClass( "Visible", true);
+}
+
+function ChooseAbilityReward(rewardID)
+{
+	let panel = $( "#AbilityRewardsMainWrapper" )
+    panel.SetHasClass( "Visible", false);
+
+    let localPlayer = Game.GetLocalPlayerID()
+
+	GameEvents.SendCustomGameEventToServer( "ability_upgrade_chosen", {"player_id":localPlayer, "reward":rewardID});
+
+	let upgradePanel = panel.FindChildTraverse("AbilityRewardContainer_" + rewardID)
+	if (upgradePanel != null) {
+		if (upgradePanel.BHasClass("SpecialAbilityUpgrade")) {
+			Game.EmitSound( "RewardChosen.REWARD_TYPE_ABILITY_UPGRADE" );
+		} else {
+			Game.EmitSound( "RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE" );
+		}
+	}
+
+	$.DispatchEvent("DropInputFocus"); 
+}
+
+function RerollAbilityUpgrades()
+{
+    let playerID = Players.GetLocalPlayer()
+
+    if (!Players.IsValidPlayerID(playerID)) {
+        return;
+    }
+
+    GameEvents.SendCustomGameEventToServer( "ability_upgrades_reroll", { "player_id" : playerID});
+    Game.EmitSound("Reroll.Base")
+}
+
+function HideBootsUpgrade(data)
+{
+	BootsUpgradeChosen = true
+    let panel = $( "#BootsReward" )
+    panel.SetHasClass( "Visible", false);
+}
+
+function OpenAbilityRewardsChoice()
+{
+	let panel = $( "#AbilityRewardsMainWrapper" )
+    
+	if (panel == null) {
+		return;
+	}
+
+	$.RegisterKeyBind("", "key_escape", function(){ClosePanel('AbilityRewardsMainWrapper')})
+
+	panel.SetFocus()
+
+	if (!panel.BHasClass("Visible")) {
+		let playerUpgrades = CustomNetTables.GetTableValue( "player_spell_upgrades", Players.GetLocalPlayer().toString() );
+	
+		if (playerUpgrades == null || playerUpgrades["upgrades"] == null || playerUpgrades["upgrades"]["1"] == null) {
+			return
+		}
+		
+		ShowAbilityUpgrades(playerUpgrades)
+
+		Game.EmitSound("Treasure.Box.Unlock.2D")
+		Game.EmitSound("RewardScreenOpen")
+	}
+}
+
+//Empty function to block clicks on Reward Panel (hittest="true" for some reason doesn't work)
+function OnAbilityRewardClick()
+{
+	let panel = $( "#AbilityRewardsMainWrapper" )
+    
+	if (panel == null) {
+		return;
+	}
+
+	panel.SetFocus()
+}
+
+function OnAbilityRewardBlur()
+{
+	let panel = $( "#AbilityRewardsMainWrapper" )
+    
+	if (panel == null) {
+		return;
+	}
+
+	panel.SetHasClass("Visible", false)
+}
+
+function UpdatePlayersInfoInGame()
+{
+	UpdateSupporterAbilitySkipCounter()
+}
+
+function UpdateSupporterAbilitySkipCounter()
+{
+	let rewardsMainPanel = $("#AbilityRewardsMainWrapper")
+	if (rewardsMainPanel == null) {
+		return
+	}
+
+	let localPlayer = Game.GetLocalPlayerID()
+	let playerStats = CustomNetTables.GetTableValue( "players_info", localPlayer.toString() );
+
+	if (playerStats != null) {
+		let abilitySkipAvailableCounter = playerStats["skip_ability_upgrades"] || 0;
+		let abilityGoldenUpgradesCounter = playerStats["ability_golden_upgrades_balance"] || 0;
+		
+		let skipWrapper = rewardsMainPanel.FindChildTraverse("SupporterUpgradesSkipWrapper")
+		if (skipWrapper != null) {
+			let skipCounter = skipWrapper.FindChildTraverse("SupporterUpgradeSkipCounter")
+	
+			if (skipCounter != null) {
+				skipCounter.text = abilitySkipAvailableCounter;
+			}
+	
+			// skipWrapper.SetHasClass("NoSkips", abilitySkipAvailableCounter <= 0)
+	
+			let skipUpgradeToggleButtons = rewardsMainPanel.FindChildrenWithClassTraverse("AbilityRewardToggleButton")
+			if (skipUpgradeToggleButtons != null) {
+	
+				for (let index = 0; index < skipUpgradeToggleButtons.length; index++) {
+					const element = skipUpgradeToggleButtons[index];
+	
+					if (!element.BHasClass("NeutralItemSkip") && element.checked == 0) {
+						element.hittest = abilitySkipAvailableCounter > 0
+						element.SetHasClass("NoSkips", abilitySkipAvailableCounter <= 0)
+					}
+	
+					if (abilitySkipAvailableCounter > 0) {
+						element.GetParent().SetHasClass("Visible", true)
+					}
+				}
+			}
+		}
+	
+		let goldenUpgradesCounter = rewardsMainPanel.FindChildTraverse("AbilityUpgradesGoldenUpgradeCounter")
+		if (goldenUpgradesCounter != null) {
+			goldenUpgradesCounter.text = abilityGoldenUpgradesCounter
+		}
+	
+		let talentRerollsCounter = rewardsMainPanel.FindChildTraverse("SupporterRerollTalentCounter")
+		if (talentRerollsCounter != null) {
+			let rerolls = 0
+	
+			if (typeof(playerStats["reroll_ability_upgrades"]) !== "undefined") {
+				rerolls = playerStats["reroll_ability_upgrades"]
+			}
+	
+			talentRerollsCounter.text = rerolls
+	
+			let container = talentRerollsCounter.GetParent().GetParent()
+	
+			if (container != null) {
+				if (rerolls == 0) {
+					container.hittest = false
+					container.SetHasClass("NoRolls", true);
+				} else {
+					container.hittest = true
+					container.SetHasClass("NoRolls", false);
+				}
+			}
+		}
+	}
+}
+
+function AbilityRewardToggle(rewardID)
+{
+	let parent = $("#AbilityRewardContainer_" + rewardID)
+
+	let isChecked = false
+
+	if (parent != null) {
+		let toggleButton = parent.FindChildrenWithClassTraverse("AbilityRewardToggleButton")
+
+		if (toggleButton != null && toggleButton[0] != null) {
+			isChecked = toggleButton[0].checked
+		}
+	}
+
+    let localPlayer = Game.GetLocalPlayerID()
+	GameEvents.SendCustomGameEventToServer( "skip_reward_upgrade", {"player_id":localPlayer, "reward_id":rewardID, "checked":isChecked});
+}

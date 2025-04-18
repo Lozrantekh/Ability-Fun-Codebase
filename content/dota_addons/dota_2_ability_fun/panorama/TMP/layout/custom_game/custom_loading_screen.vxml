@@ -1,0 +1,17 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/hudstyles.vcss_c" />
+        <include src="s2r://panorama/styles/hud/dota_hud_pregame.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/custom_loading_screen.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/custom_loading_screen.vjs_c" />
+    </scripts>
+    <Panel class="AbilityDraftLoadingRoot">
+    </Panel>
+    <snippets>
+    </snippets>
+</root>

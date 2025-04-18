@@ -1,0 +1,1327 @@
+"use strict";
+
+CustomNetTables.SubscribeNetTableListener( "players_ability_picks_2", UpdateScoreboardPlayerPickedAbilities )
+CustomNetTables.SubscribeNetTableListener( "players_info", UpdateScoreboardPlayerPickedAbilities )
+
+var EVENTS_REGISTERED = false
+
+var FIRST_SCEPTER_TOOLTIP_CHECK = true
+var FIRST_ABILITY_TOOLTIP_CHECK = true
+
+var AGHS_MAIN_TOOLTIP = null;
+var ABILITY_MAIN_TOOLTIP = null;
+
+var AllAbilitiesUpgradesScheduler = null;
+var AbilityEntityScheduler = null;
+
+var LastUpdatedTooltip = {
+    panel : null,
+    tooltip_id : "",
+    entity_id : null,
+    ability_name : "",
+    event_name: "",
+    updated : false,
+}
+
+var SCOREBOARD_PANEL = null;
+var SCOREBOARD_PANEL_OPENED = false;
+var TOOLTIP_UPDATED_ON_ALT = false
+var SCOREBOARD_FIXED = false
+var SCOREBOARD_TREE_TALENTS_UPDATED = false
+
+function GetSelectedEntityAbilityData(entityID)
+{
+
+    let abilityCount = Entities.GetAbilityCount( entityID )
+    // // $.Msg("ability count: ", abilityCount)
+
+    let abilityList = [];
+
+    for (let i = 0; i < abilityCount; i++) {
+        // // $.Msg(Abilities.GetAbilityName(Entities.GetAbility(Players.GetLocalPlayerPortraitUnit(), i)))
+
+        let abilityID = Entities.GetAbility(entityID, i)
+        if (abilityID == null || abilityID == -1 || Abilities.IsAttributeBonus( abilityID)) {
+            continue;
+        }
+
+        let abilityName = Abilities.GetAbilityName(abilityID);
+        if( typeof(abilityName) !== "string" || abilityName == "" || abilityName == "generic_hidden" || abilityName.includes("special_bonus_")) {
+            continue;
+        }
+
+        abilityList.push(abilityName)
+    }
+
+    return abilityList
+}
+
+function OnScepterShardStatusTooltip(panel, heroID) {
+    if (panel == null) {
+        return
+    }
+
+    LastUpdatedTooltip.event_name = "OnScepterShardStatusTooltip"
+    LastUpdatedTooltip.tooltip_id = "DOTAHUDAghsStatusTooltip"
+    LastUpdatedTooltip.ability_name = ""
+    LastUpdatedTooltip.panel = panel
+    LastUpdatedTooltip.entity_id = null
+    LastUpdatedTooltip.updated = false
+
+    ClearTooltipSchedulers();
+    AddAbilityDraftNotes("", true);
+
+    let entityID = Players.GetLocalPlayerPortraitUnit()
+
+    if (!Entities.IsValidEntity(entityID)) {
+        return;
+    }
+
+    let abilityList = GetSelectedEntityAbilityData(entityID);
+    
+    if (FIRST_SCEPTER_TOOLTIP_CHECK) {
+        FIRST_SCEPTER_TOOLTIP_CHECK = false
+
+        let tooltip = GetScepterShardTooltipPanels("general")
+
+        if (tooltip != null && tooltip.main_panel != null) {
+            tooltip.main_panel.visible = false
+        }
+
+        $.Schedule(0.1, function() {
+            UpdateScepterShardUpgradesForAbilities(abilityList, "general");
+        })
+
+    } else {
+        UpdateScepterShardUpgradesForAbilities(abilityList, "general");
+    }
+}
+
+var ABILITY_GUIDS_HIDDEN = false
+
+function OnAbilityTooltip(panel, abilityName) {
+
+    if (panel == null) {
+        return
+    }
+
+    if (abilityName == undefined || abilityName == null || abilityName == "" || 
+        (abilityName.startsWith("item_") && (abilityName != "item_ultimate_scepter") && 
+        abilityName != "item_ultimate_scepter_2" && abilityName != "item_aghanims_shard" )) {
+
+        AddAbilityDraftNotes("", true);
+        // CreateAndShowBoostSpellValue("", true);
+        return;
+    }
+
+    if (!ABILITY_GUIDS_HIDDEN) {
+        // AbilityBuildComment
+        let guildsDesc = GetHUDPanelByID("AbilityBuildComment")
+        if (guildsDesc != null) {
+            guildsDesc.visible = false
+
+            let guildTitle = guildsDesc.GetParent().FindChildrenWithClassTraverse("AbilityBuildHeader")
+
+            if (guildTitle != null && guildTitle.length > 0) {
+                guildTitle[0].visible = false
+            }
+
+            ABILITY_GUIDS_HIDDEN = true
+        }
+    }
+
+    LastUpdatedTooltip.event_name = "DOTAShowAbilityTooltip"
+    LastUpdatedTooltip.tooltip_id = "DOTAAbilityTooltip"
+    LastUpdatedTooltip.ability_name = abilityName
+    LastUpdatedTooltip.panel = panel
+    LastUpdatedTooltip.entity_id = null
+    LastUpdatedTooltip.updated = false
+
+    ClearTooltipSchedulers();
+    AddAbilityDraftNotes(abilityName, false);
+    // CreateAndShowBoostSpellValue(abilityName, false);
+
+    if (panel.FindAncestor("inventory") == null && !panel.BHasClass("AbilityUpgradeLabel")) {
+        return;
+    }
+
+    let tooltipType = "ability"
+
+    if (abilityName == "item_ultimate_scepter" || abilityName == "item_ultimate_scepter_2") {
+        tooltipType = "scepter"
+    }
+
+    if (abilityName == "item_aghanims_shard") {
+        tooltipType = "shard"
+    }
+    
+    let isItem = typeof(abilityName) === "string" && abilityName.startsWith("item_");
+    let abilityList = [];
+
+    let entityID = Players.GetLocalPlayerPortraitUnit();
+
+    if (isItem) {
+        if (entityID == null || !Entities.IsValidEntity(entityID)) {
+            return;
+        }
+
+        abilityList = GetSelectedEntityAbilityData(entityID);
+    }
+
+    if (FIRST_ABILITY_TOOLTIP_CHECK) {
+        FIRST_ABILITY_TOOLTIP_CHECK = false
+
+        $.Schedule(0.1, function() {
+            if (isItem && (tooltipType == "scepter" || tooltipType == "shard")) {
+                UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+            } else {
+                UpdateAbilityScepterShardInfo(abilityName, true, true)
+            }
+        })
+
+    } else {
+        if (isItem && (tooltipType == "scepter" || tooltipType == "shard")) {
+            UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+        } else {
+            UpdateAbilityScepterShardInfo(abilityName, true, true)
+        }
+    }
+}
+
+function OnAbilityTooltipDroppedItem(panel, param1, param2, itemName, param4, param5) {
+    if (panel == null) {
+        return
+    }
+
+    if (itemName == undefined || itemName == null || itemName == "" || 
+        itemName !== "item_ultimate_scepter" && itemName !== "item_ultimate_scepter_2" && itemName !== "item_aghanims_shard") {
+        
+        AddAbilityDraftNotes("", true);
+        // CreateAndShowBoostSpellValue("", true);
+        return;
+    }
+
+    LastUpdatedTooltip.event_name = "DOTAShowDroppedItemTooltip"
+    LastUpdatedTooltip.tooltip_id = "DOTAAbilityTooltip"
+    LastUpdatedTooltip.ability_name = param1
+    LastUpdatedTooltip.panel = panel
+    LastUpdatedTooltip.entity_id = param2
+    LastUpdatedTooltip.updated = false
+    LastUpdatedTooltip.param3 = itemName
+    LastUpdatedTooltip.param4 = param4
+
+    ClearTooltipSchedulers();
+    AddAbilityDraftNotes("", true); 
+    // CreateAndShowBoostSpellValue("", true);
+    
+    let tooltipType = ""
+
+    if (itemName == "item_ultimate_scepter" || itemName == "item_ultimate_scepter_2") {
+        tooltipType = "scepter"
+    }
+
+    if (itemName == "item_aghanims_shard") {
+        tooltipType = "shard"
+    }
+
+    let entityID = GetBestPossibleLocalEntityID();
+    if (entityID == null || !Entities.IsValidEntity(entityID)) {
+        return;
+    }
+
+    let abilityList = GetSelectedEntityAbilityData(entityID);
+
+
+    if (FIRST_ABILITY_TOOLTIP_CHECK) {
+        FIRST_ABILITY_TOOLTIP_CHECK = false
+        
+        let tooltip = GetScepterShardTooltipPanels("ability")
+
+        if (tooltip != null && tooltip.main_panel != null) {
+            tooltip.main_panel.visible = false
+        }
+        
+        $.Schedule(0.1, function(){
+            UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+        })
+
+    } else {
+        UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+    }
+}
+
+
+function OnAbilityShopItemTooltip(panel, abilityName, param3, param4)
+{
+    if (panel == null) {
+        return
+    }
+
+    if (abilityName == undefined || abilityName == null || abilityName == "" || 
+        abilityName !== "item_ultimate_scepter" && abilityName !== "item_ultimate_scepter_2" && abilityName !== "item_aghanims_shard") {
+        
+        AddAbilityDraftNotes("", true);
+        // CreateAndShowBoostSpellValue("", true);
+        return;
+    }
+
+    LastUpdatedTooltip.event_name = "DOTAShowAbilityShopItemTooltip"
+    LastUpdatedTooltip.tooltip_id = "DOTAAbilityTooltip"
+    LastUpdatedTooltip.ability_name = abilityName
+    LastUpdatedTooltip.panel = panel
+    LastUpdatedTooltip.entity_id = null
+    LastUpdatedTooltip.updated = false
+    LastUpdatedTooltip.param3 = param3
+    LastUpdatedTooltip.param4 = param4
+
+    ClearTooltipSchedulers();
+    AddAbilityDraftNotes(abilityName, false);
+    // CreateAndShowBoostSpellValue(abilityName, false);
+
+    let tooltipType = "scepter"
+
+    if (abilityName == "item_aghanims_shard") {
+        tooltipType = "shard"
+    }
+
+    let playerID = Players.GetLocalPlayer()
+    let entityID = null;
+
+    if (playerID != null && playerID != -1) {
+        entityID = Players.GetPlayerHeroEntityIndex( playerID )
+    }
+
+    if (entityID == null) {
+        entityID = GetBestPossibleLocalEntityID()
+    }
+
+    if (!Entities.IsValidEntity(entityID)){
+        return;
+    }
+
+    // $.Msg(Entities.GetUnitName(entityID))
+
+    let abilityList = GetSelectedEntityAbilityData(entityID);
+
+    if (FIRST_ABILITY_TOOLTIP_CHECK) {
+        FIRST_ABILITY_TOOLTIP_CHECK = false
+
+        let tooltip = GetScepterShardTooltipPanels("ability")
+
+        if (tooltip != null && tooltip.main_panel != null) {
+            tooltip.main_panel.visible = false
+        }
+
+        $.Schedule(0.1, function() {
+            UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+        })
+
+    } else {
+        // $.Msg(abilityList)
+        UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType);
+    }
+
+    // $.Msg("przeszedl do konca")
+}
+
+function OnAbilityTooltipForEntity(panel, abilityName, entityID)
+{
+    if (panel == null) {
+        return
+    }
+
+    LastUpdatedTooltip.event_name = "DOTAShowAbilityTooltipForEntityIndex"
+    LastUpdatedTooltip.tooltip_id = "DOTAAbilityTooltip"
+    LastUpdatedTooltip.ability_name = abilityName
+    LastUpdatedTooltip.panel = panel
+    LastUpdatedTooltip.entity_id = entityID
+    LastUpdatedTooltip.updated = false
+
+    ClearTooltipSchedulers();
+    AddAbilityDraftNotes(abilityName, false);
+    // CreateAndShowBoostSpellValue(abilityName, false);
+
+    if (!ABILITY_GUIDS_HIDDEN) {
+        // AbilityBuildComment
+        let guildsDesc = GetHUDPanelByID("AbilityBuildComment")
+        if (guildsDesc != null) {
+            guildsDesc.visible = false
+
+            let guildTitle = guildsDesc.GetParent().FindChildrenWithClassTraverse("AbilityBuildHeader")
+
+            if (guildTitle != null && guildTitle.length > 0) {
+                guildTitle[0].visible = false
+            }
+
+            ABILITY_GUIDS_HIDDEN = true
+        }
+    }
+
+    if (!Entities.IsValidEntity(entityID)) {
+        return;
+    }
+
+    let playerID = Entities.GetPlayerOwnerID(entityID)
+
+    if (playerID != null) {
+        AddSpellUpgradeInfo(abilityName, playerID, false)
+    }
+
+    let hasScepter = Entities.HasScepter(entityID)
+    let hasShard = false;
+
+    let buffs = Entities.GetNumBuffs( entityID )
+
+    for (let index = 0; index < buffs; index++) {
+        let buffID = Entities.GetBuff( entityID, index )
+        if (buffID !== null && buffID !== undefined) {
+            let buffName = Buffs.GetName(entityID, buffID)
+            if (typeof(buffName) === "string" && buffName == "modifier_item_aghanims_shard") {
+                hasShard = true;
+                break;
+            }       
+        }
+    }
+
+    if (!hasScepter && !hasShard) {
+        // $.Msg("brak scepter + shard")
+        return;
+    }
+
+    if (FIRST_ABILITY_TOOLTIP_CHECK && panel !== null) {
+        FIRST_ABILITY_TOOLTIP_CHECK = false
+
+        let tooltip = GetScepterShardTooltipPanels("ability")
+
+        if (tooltip != null && tooltip.main_panel != null) {
+            tooltip.main_panel.visible = false
+        }
+
+        $.Schedule(0.1, function() {
+            UpdateAbilityScepterShardInfo(abilityName, hasScepter, hasShard)
+        })
+
+    } else {
+       UpdateAbilityScepterShardInfo(abilityName, hasScepter, hasShard)
+    }
+}
+
+
+function UpdateAbilityScepterShardInfo(abilityName, hasScepter, hasShard)
+{
+    let upgradePanels = GetScepterShardTooltipPanels("ability")
+
+    if (typeof(upgradePanels) !== "object" || typeof(upgradePanels.main_panel) === "null" || 
+        typeof(upgradePanels.scepter_panel) === "null" || typeof(upgradePanels.shard_panel) === "null") {
+        return;
+    }
+
+    let mainPanel = upgradePanels.main_panel
+    let scepterContainer = upgradePanels.scepter_panel
+    let shardContainer = upgradePanels.shard_panel
+
+    let abilityUpgradeData = GetAbilityAghanimUpgrades(abilityName)
+
+    if (abilityUpgradeData == null) {
+        return
+    }
+
+    mainPanel.style.visibility = "collapse";
+    
+    AbilityEntityScheduler = $.Schedule(0.1, function(){
+        mainPanel.style.visibility = "visible";
+        AbilityEntityScheduler = null;
+
+        let noScepterUpgrade = false
+
+        if (hasScepter && scepterContainer !== null) {
+            scepterContainer.RemoveAndDeleteChildren();
+
+            if (!IsScepterShardMeetRequirements(abilityUpgradeData, "scepter")) {
+                scepterContainer.SetHasClass("Hidden", true)
+                scepterContainer.SetHasClass("NoUpgrade", true)
+
+                noScepterUpgrade = true
+            }
+
+        } else {
+            scepterContainer = null;
+        }
+
+        if (hasShard && shardContainer !== null) {
+            shardContainer.RemoveAndDeleteChildren();
+
+            if (!IsScepterShardMeetRequirements(abilityUpgradeData, "shard")) {
+                shardContainer.SetHasClass("Hidden", true)
+                shardContainer.SetHasClass("NoUpgrade", true)
+                
+                if (noScepterUpgrade) {
+                    return
+                }
+            }
+
+        } else {
+            shardContainer = null;
+        }
+
+        AddAbilityShardScepterUpgradesInfo(abilityUpgradeData, scepterContainer, shardContainer, true, false)
+        CheckUpdatedTooltipCorrectPosition(mainPanel);
+    })
+}
+
+function GetScepterShardTooltipPanels(tooltipType)
+{
+    let result = {
+        main_panel : null,
+        scepter_panel : null,
+        shard_panel : null,
+    }
+
+    let mainHudPanel = GetMainHUDPanel()
+    if (mainHudPanel == null) {
+        return result;
+    }
+
+    let tooltipManager = mainHudPanel.FindChildTraverse("Tooltips");
+    if (tooltipManager == null) {
+        // $.Msg("null 1")
+        return result;
+    }
+
+    let mainTooltipPanelID = "DOTAHUDAghsStatusTooltip"
+    if (tooltipType == "scepter" || tooltipType == "shard" || tooltipType == "ability") {
+        mainTooltipPanelID = "DOTAAbilityTooltip"
+    }
+
+    let mainTooltipPanel = tooltipManager.FindChildTraverse(mainTooltipPanelID) //DOTAAbilityTooltip
+    if (mainTooltipPanel == null) {
+        // $.Msg("null 2")
+        return result;
+    }
+
+    result.main_panel = mainTooltipPanel
+
+    let scepterContainerID = "AghsScepterContainer"
+    if (tooltipType == "scepter" || tooltipType == "ability") {
+        scepterContainerID = "ScepterUpgradeDescription"
+    }
+
+    let scepterContainer = mainTooltipPanel.FindChildTraverse(scepterContainerID) //ScepterUpgradeDescription
+    if (scepterContainer == null) {
+        // $.Msg("null 3")
+    }
+
+    result.scepter_panel = scepterContainer
+
+    let shardContainerID = "AghsShardContainer"
+    if (tooltipType == "shard" || tooltipType == "ability") {
+        shardContainerID = "ShardUpgradeDescription"
+    }
+
+    let shardContainer = mainTooltipPanel.FindChildTraverse(shardContainerID) //ShardUpgradeDescription
+    if (shardContainer == null) {
+        // $.Msg("null 4")
+    }
+
+    result.shard_panel = shardContainer
+
+    // // $.Msg("wynik paneli: ", result)
+    return result;
+
+}
+
+function UpdateScepterShardUpgradesForAbilities(abilityList, tooltipType)
+{
+    // // $.Msg("list: ", abilityList)
+    if (typeof(abilityList) !== "object" || abilityList.length == null || abilityList.length == undefined) {
+        return;
+    }
+
+    let upgradePanels = GetScepterShardTooltipPanels(tooltipType)
+
+    if (typeof(upgradePanels) !== "object" || upgradePanels.main_panel === null ) {
+        // $.Msg(upgradePanels)
+        // $.Msg("tutaj przerywa")
+        return;
+    }
+
+    let mainPanel = upgradePanels.main_panel;
+    let scepterContainer = upgradePanels.scepter_panel;
+    let shardContainer = upgradePanels.shard_panel;
+    let addHeaders = true;
+    let forceLocalHero = false;
+
+    if (tooltipType == "shard") {
+        scepterContainer = null;
+        addHeaders = false;
+        forceLocalHero = true;
+    } else if (tooltipType == "scepter") {
+        shardContainer = null;
+        addHeaders = false;
+        forceLocalHero = true;
+    }
+
+    mainPanel.visible = false
+
+    let abilityUpgradeData = [];
+
+    for (let i = 0; i < abilityList.length; i++) {
+        // const abilityID = abilityList[i]
+        let abilityName = abilityList[i]
+
+        // let abilityName = Abilities.GetAbilityName(abilityID)
+
+        if (typeof(abilityName) !== "string" || abilityName == "") {
+            continue;
+        }
+
+        let abilityInfo = GetAbilityAghanimUpgrades(abilityName)
+
+        if (abilityInfo != null) {
+            abilityUpgradeData.push(abilityInfo);
+        }
+    }
+
+    if (abilityUpgradeData.length == 0 ) {
+        let hasModifiedAbilities = false
+        let entityID = Players.GetLocalPlayerPortraitUnit()
+
+        if (entityID !== null) {
+            let buffs = Entities.GetNumBuffs( entityID )
+
+            for (let index = 0; index < buffs; index++) {
+                let buffID = Entities.GetBuff( entityID, index )
+                if (buffID !== null && buffID !== undefined) {
+                    let buffName = Buffs.GetName(entityID, buffID)
+                    if (typeof(buffName) === "string" && buffName == "modifier_hero_ability_modified_ad_2023") {
+                        hasModifiedAbilities = true;
+                        break;
+                    }       
+                }
+            }
+    
+            if (!hasModifiedAbilities) {
+                mainPanel.visible = true
+                return;
+            }
+        }
+    }
+
+    AllAbilitiesUpgradesScheduler = $.Schedule(0.1, function(){
+        if (scepterContainer !== null) {
+            scepterContainer.RemoveAndDeleteChildren();
+        }
+
+        if (shardContainer !== null) {
+            shardContainer.RemoveAndDeleteChildren();
+        }
+
+        for (let index = 0; index < abilityUpgradeData.length; index++) {
+            const abilityInfo = abilityUpgradeData[index];
+
+            AddAbilityShardScepterUpgradesInfo(abilityInfo, scepterContainer, shardContainer, addHeaders, forceLocalHero)
+        }
+
+        if (scepterContainer != null && scepterContainer.GetChildCount() == 0) {
+            let scepterPanel = $.CreatePanel("Panel", $.GetContextPanel(), "");
+            scepterPanel.BLoadLayoutSnippet("NoUpgradeSnippet");
+            scepterPanel.SetParent(scepterContainer);
+            scepterPanel.style.marginLeft = "5px"
+            scepterContainer.SetHasClass("NoUpgrade", true)
+        }
+
+        if (shardContainer != null && shardContainer.GetChildCount() == 0) {
+            let shardPanel = $.CreatePanel("Panel", $.GetContextPanel(), "");
+            shardPanel.BLoadLayoutSnippet("NoUpgradeSnippet");
+            shardPanel.SetParent(shardContainer);
+            shardPanel.style.marginLeft = "5px"
+            shardContainer.SetHasClass("NoUpgrade", true)
+        }
+        
+        mainPanel.visible = true
+        CheckUpdatedTooltipCorrectPosition(mainPanel);
+
+        AllAbilitiesUpgradesScheduler = null;
+    })
+}
+
+function ClearTooltipSchedulers()
+{
+    // $.Msg("clear tooltip")
+
+    try {
+        if (AllAbilitiesUpgradesScheduler !== null) {
+            $.CancelScheduled(AllAbilitiesUpgradesScheduler);
+            AllAbilitiesUpgradesScheduler = null;
+        }
+    
+        if (AbilityEntityScheduler !== null) {
+            $.CancelScheduled(AbilityEntityScheduler);
+            AbilityEntityScheduler = null;
+        }        
+    } catch (error) {
+        $.Msg("Error when clear schedulers")
+    }
+
+    let tooltipManager = null;
+
+    if (AGHS_MAIN_TOOLTIP == null || ABILITY_MAIN_TOOLTIP == null) {
+        tooltipManager = GetTooltipManagerPanel()
+    }
+
+    if (AGHS_MAIN_TOOLTIP == null && tooltipManager != null) {
+        AGHS_MAIN_TOOLTIP = tooltipManager.FindChildTraverse("DOTAHUDAghsStatusTooltip")
+    }
+    
+    if (AGHS_MAIN_TOOLTIP !== null) {
+        AGHS_MAIN_TOOLTIP.style.visibility = "visible"
+    }
+
+    if (ABILITY_MAIN_TOOLTIP == null && tooltipManager != null) {
+        ABILITY_MAIN_TOOLTIP = tooltipManager.FindChildTraverse("DOTAAbilityTooltip")
+    }
+    
+    if (ABILITY_MAIN_TOOLTIP !== null) {
+        ABILITY_MAIN_TOOLTIP.style.visibility = "visible"
+    }
+}
+
+function AddSpellUpgradeInfo(abilityName, playerID, isClear)
+{
+    if (abilityName == undefined || abilityName == null) {
+        return;
+    }
+
+    let tooltipManager = GetTooltipManagerPanel()
+    if (tooltipManager == null) {
+        return;
+    }
+
+    let mainTooltipPanel = tooltipManager.FindChildTraverse("DOTAAbilityTooltip")
+    if (mainTooltipPanel == null) {
+        return;
+    }
+
+    let descContainer = mainTooltipPanel.FindChildTraverse("AbilityCoreDetails")
+    if (descContainer == null) {
+        return;
+    }
+    
+    let upgradeInfoWrapper = descContainer.FindChildTraverse("AbilityupgradeInfoWrapper")
+
+    if (upgradeInfoWrapper == null) {
+        upgradeInfoWrapper = $.CreatePanel("Panel", descContainer, "AbilityupgradeInfoWrapper");
+    } 
+
+    upgradeInfoWrapper.style.visibility = "collapse";
+    upgradeInfoWrapper.RemoveAndDeleteChildren();
+
+    if (isClear) {
+        return
+    }
+
+    //for items no boost - so only collapse panel
+    if (playerID == -1 || abilityName == "" || abilityName.startsWith("item_")) {
+        return;
+    }
+    
+    let allUpgrades = CustomNetTables.GetTableValue( "player_chosen_spell_upgrades", playerID.toString() );
+    if (allUpgrades != null && allUpgrades != undefined) {
+        let abilityUpgrades = allUpgrades[abilityName]
+
+        if (typeof(abilityUpgrades) == "object") {
+            
+            upgradeInfoWrapper.style.flowChildren = "down"
+
+            for (const [key, data] of Object.entries(abilityUpgrades)) {
+                let upgradeDescription = GetSpellUpgradeDescription(data)
+                
+                if (upgradeDescription != null && upgradeDescription != "") {
+                    let upgradeInfo = $.CreatePanel("Panel", upgradeInfoWrapper, "");
+
+                    if (upgradeInfo != null) {
+                        upgradeInfo.style.flowChildren = "right"
+                        upgradeInfo.style.margin = "0px 10px 15px 10px"
+                        upgradeInfo.style.horizontalAlign = "center"
+                        upgradeInfo.style.backgroundColor = "#1f1700"
+                        upgradeInfo.style.border = "2px solid rgba(255, 255, 182, 0.35)"
+                        upgradeInfo.style.borderRadius = "2px"
+                        
+                        let icon = $.CreatePanel("Image", upgradeInfo, "");
+                        if (icon != null) {
+                            icon.SetScaling("stretch-to-fit-preserve-aspect")
+                            icon.SetImage("s2r://panorama/images/hud/reborn/levelup_plus_fill_psd.vtex");
+                            icon.style.width = "20px"
+                            icon.style.verticalAlign = "center"
+                            icon.style.margin = "0 2px"
+                        }
+
+                        let description = $.CreatePanel("Label", upgradeInfo, "");
+                        if (description != null) {
+                            description.html = true;
+
+                            let title = ""
+
+                            if (data["title"] != null) {
+                                title = $.Localize( data["title"])
+                            }
+
+                            description.text = "<font color='gold'>" + title + "</font><br>" + upgradeDescription
+                            description.style.borderLeft = "2px solid rgba(255, 255, 182, 0.35)"
+                            description.style.paddingLeft = "5px"
+                            description.style.backgroundColor = "#292929"
+                        }
+                    }
+
+                    upgradeInfoWrapper.style.visibility = "visible"
+
+                    let spellDescription = descContainer.FindChildTraverse("AbilityDescriptionOuterContainer")
+
+                    if (spellDescription != null) {
+                        descContainer.MoveChildAfter(upgradeInfoWrapper, spellDescription);
+                    }
+
+                }
+            }
+        }
+    }
+}
+
+
+var EnemyTeamJungleTreasuresOpened = false
+
+function OnDotaHudUpdate()
+{
+    if (GameUI.IsAltDown())
+    {
+        if (!EnemyTeamJungleTreasuresOpened) {
+            ShowEnemyJungleTreasureStats()
+            EnemyTeamJungleTreasuresOpened = true
+        }
+        
+    } else if (EnemyTeamJungleTreasuresOpened) {
+        HideEnemyJungleTreasuresStats()
+        EnemyTeamJungleTreasuresOpened = false
+    }
+
+    if ((GameUI.IsAltDown() && !TOOLTIP_UPDATED_ON_ALT) || (!GameUI.IsAltDown() && TOOLTIP_UPDATED_ON_ALT)) {
+        // $.Msg("check on alt: ", GameUI.IsAltDown())
+        if (LastUpdatedTooltip == null || LastUpdatedTooltip.event_name == null || LastUpdatedTooltip.event_name == "" ||
+            LastUpdatedTooltip.tooltip_id == null || LastUpdatedTooltip.tooltip_id == "" ||  LastUpdatedTooltip.panel == null) {
+            TOOLTIP_UPDATED_ON_ALT = false
+            return;
+        }
+
+        let panel = LastUpdatedTooltip.panel || null;
+        let eventName = LastUpdatedTooltip.event_name || "";
+        let abilityName = LastUpdatedTooltip.ability_name || "";
+        let entityID = LastUpdatedTooltip.entity_id || 0;
+        let tooltipID = LastUpdatedTooltip.tooltip_id || "";
+
+        let tooltipPanel = GetHUDPanelByID(tooltipID)
+        if (tooltipPanel == null || !tooltipPanel.BHasClass("TooltipVisible")) {
+            TOOLTIP_UPDATED_ON_ALT = false
+            return;
+        }
+
+        if (entityID == null || entityID == -1) {
+            entityID = Players.GetLocalPlayerPortraitUnit()
+        }
+
+        if (eventName == "DOTAShowAbilityTooltipForEntityIndex")
+        {
+            if (entityID !== null && entityID !== -1) {
+                OnAbilityTooltipForEntity(panel, abilityName, entityID);
+            }
+
+        } else if (eventName == "DOTAShowAbilityTooltip") {
+            OnAbilityTooltip(panel, abilityName);
+        } else if (eventName == "DOTAShowAbilityShopItemTooltip") {
+            if (LastUpdatedTooltip.param3 !== null && LastUpdatedTooltip.param4 !== null) {
+                OnAbilityShopItemTooltip(panel, abilityName, LastUpdatedTooltip.param3, LastUpdatedTooltip.param4)
+            }
+        } else if (eventName == "DOTAShowDroppedItemTooltip"){
+            if (LastUpdatedTooltip.ability_name !== null && LastUpdatedTooltip.entity_id !== null){
+                OnAbilityTooltipDroppedItem(panel, LastUpdatedTooltip.ability_name, LastUpdatedTooltip.entity_id, LastUpdatedTooltip.param3, LastUpdatedTooltip.param4)
+            }
+        }
+
+        if (GameUI.IsAltDown()) {
+            LastUpdatedTooltip.updated = true
+            TOOLTIP_UPDATED_ON_ALT = true
+
+        } else {
+            TOOLTIP_UPDATED_ON_ALT = false
+        }
+    }
+
+    if (SCOREBOARD_PANEL === null) {
+        SCOREBOARD_PANEL = GetHUDPanelByID("scoreboard")
+    }
+
+    if (SCOREBOARD_PANEL != null && !SCOREBOARD_PANEL.BHasClass("ScoreboardClosed")) {
+        SCOREBOARD_PANEL_OPENED = true
+
+    } else {
+        SCOREBOARD_PANEL_OPENED = false
+        SCOREBOARD_TREE_TALENTS_UPDATED = false
+    }
+
+    if (SCOREBOARD_PANEL_OPENED && !SCOREBOARD_TREE_TALENTS_UPDATED) {
+        FixScoreboardTreeTalents()
+        SCOREBOARD_TREE_TALENTS_UPDATED = true
+    }
+}
+
+function ShowEnemyJungleTreasureStats()
+{
+    let enemyPanel = $("#JungleCreepTreasuresValuesEnemy")
+    let enemyLabel = $("#JungleCreepTreasuresEnemyLabel")
+
+    if (enemyPanel != null) {
+        enemyPanel.SetHasClass("Visible", true)
+    }
+
+    if (enemyLabel != null) {
+        enemyLabel.SetHasClass("Visible", true)
+    }
+}
+
+function HideEnemyJungleTreasuresStats()
+{
+    let enemyPanel = $("#JungleCreepTreasuresValuesEnemy")
+    let enemyLabel = $("#JungleCreepTreasuresEnemyLabel")
+
+    if (enemyPanel != null) {
+        enemyPanel.SetHasClass("Visible", false)
+    }
+
+    if (enemyLabel != null) {
+        enemyLabel.SetHasClass("Visible", false)
+    }
+}
+
+function FixScoreboard()
+{
+    let scoreboardContainer = GetHUDPanelByID("scoreboard")
+
+    if (scoreboardContainer != null) {
+        let radiantContainer = scoreboardContainer.FindChildTraverse("RadiantTeamContainer")
+        let direContainer = scoreboardContainer.FindChildTraverse("DireTeamContainer")
+        
+        let sharedUnits = scoreboardContainer.FindChildTraverse("SharedUnitControl")
+        let itemsButton = scoreboardContainer.FindChildTraverse("ShowItemsButton")
+    
+        if (itemsButton != null) {
+            itemsButton.visible = false;
+        }
+    
+        if (radiantContainer != null) {
+            radiantContainer.style["height"] = "fit-children"
+        }
+    
+        if (direContainer != null) {
+            direContainer.style["height"] = "fit-children"
+        }
+    
+        if (sharedUnits != null) {
+            sharedUnits.style["height"] = "fit-children"
+    
+            if (sharedUnits.BHasClass("Dire")) {
+                sharedUnits.style["vertical-align"] = "bottom"
+                sharedUnits.style["margin-bottom"] = "40px"
+            }
+        }
+
+        scoreboardContainer.style["height"] = "fit-children"
+        scoreboardContainer.style["ui-scale"] = "73%"
+        scoreboardContainer.style["width"] = "fit-children"
+
+        let background = scoreboardContainer.FindChildTraverse("Background")
+        if (background != null) {
+            background.style["height"] = "fit-children"
+        }
+
+        UpdateScoreboardPlayerPickedAbilities();
+    }
+
+}
+
+function FixScoreboardTreeTalents()
+{
+    let scoreboardContainer = GetHUDPanelByID("scoreboard")
+
+    if (scoreboardContainer == null) {
+        return
+    }
+
+    let avatars = scoreboardContainer.FindChildrenWithClassTraverse("ScoreboardAvatar")
+
+    if (avatars != null) {
+        for (let index = 0; index < avatars.length; index++) {
+            const element = avatars[index];
+    
+            let accountID = 0
+    
+            if (element.accountid != null) {
+                accountID = element.accountid
+            }
+    
+            if (accountID == 0) {
+                accountID = index
+            }
+
+            let playerRootPanel = element.GetParent().GetParent()
+    
+            let treeTalent = playerRootPanel.FindChildTraverse("TalentTree")
+    
+            if (treeTalent != null) {
+                treeTalent.SetAttributeString("account_id", accountID)
+
+                let heroImage = treeTalent.GetParent().FindChildTraverse("HeroImage")
+
+                if (heroImage != null && heroImage.heroid !== null) {
+                    treeTalent.SetAttributeString("hero_id", heroImage.heroid)
+                }
+
+                treeTalent.ClearPanelEvent("onmouseover")
+                treeTalent.ClearPanelEvent("onmouseout")
+    
+                treeTalent.SetPanelEvent("onmouseover", function(){
+                    ShowBaseHeroTreeTalents("", treeTalent);
+                })
+    
+                treeTalent.SetPanelEvent("onmouseout", function(){
+                    $.DispatchEvent("DOTAHUDHideStatBranchTooltip")
+                })
+            }
+        }
+    }
+}
+
+function UpdateScoreboardPlayerPickedAbilities()
+{
+    let labelHeight = 35
+    let cellHeight = 68
+
+    let scoreboardContainer = GetHUDPanelByID("scoreboard")
+
+    if (scoreboardContainer == null) {
+        return
+    }
+
+    let background = scoreboardContainer.FindChildTraverse("Background")
+    let avatars = scoreboardContainer.FindChildrenWithClassTraverse("ScoreboardAvatar")
+
+    if (avatars != null) {
+        //MMR main container
+        let mmrContainer = scoreboardContainer.FindChildTraverse("PlayersCustomMMR")
+        if (mmrContainer == null) {
+            mmrContainer = $.CreatePanel("Panel", scoreboardContainer, "PlayersCustomMMR")
+            mmrContainer.style["flow-children"] = "down"
+            mmrContainer.style["background-color"] = "rgba(0,0,0,0.75)"
+            mmrContainer.style["background-image"] = "url('s2r://panorama/images/hud/reborn/bg_scoreboard_psd.vtex')"
+            mmrContainer.style["background-size"] = "cover"
+
+            if (background != null){
+                scoreboardContainer.MoveChildAfter(mmrContainer, background)
+            }
+        } else {
+            mmrContainer.RemoveAndDeleteChildren()
+            // mmrContainer.DeleteAsync(0)
+        }
+
+        //Golden Treasure Main Container
+        let goldenTreasuresContainer = scoreboardContainer.FindChildTraverse("PlayersGoldenTreasures")
+        if (goldenTreasuresContainer == null) {
+            goldenTreasuresContainer = $.CreatePanel("Panel", scoreboardContainer, "PlayersGoldenTreasures")
+            goldenTreasuresContainer.style["flow-children"] = "down"
+            goldenTreasuresContainer.style["background-color"] = "rgba(0,0,0,0.75)"
+            goldenTreasuresContainer.style["background-image"] = "url('s2r://panorama/images/hud/reborn/bg_scoreboard_psd.vtex')"
+            goldenTreasuresContainer.style["background-size"] = "cover"
+
+            if (mmrContainer != null){
+                scoreboardContainer.MoveChildAfter(goldenTreasuresContainer, mmrContainer)
+            } else if (background != null) {
+                scoreboardContainer.MoveChildAfter(goldenTreasuresContainer, background)
+            }
+
+        } else {
+            goldenTreasuresContainer.RemoveAndDeleteChildren()
+            // goldenTreasuresContainer.DeleteAsync(0)
+        }
+
+        //Abilities Main Container
+        let abilityContainer = scoreboardContainer.FindChildTraverse("PickedAbilities")
+        if (abilityContainer == null) {
+            abilityContainer = $.CreatePanel("Panel", scoreboardContainer, "PickedAbilities")
+            abilityContainer.style["flow-children"] = "down"
+            abilityContainer.style["background-color"] = "rgba(0,0,0,0.75)"
+            abilityContainer.style["background-image"] = "url('s2r://panorama/images/hud/reborn/bg_scoreboard_psd.vtex')"
+            abilityContainer.style["background-size"] = "cover"
+
+            if (goldenTreasuresContainer != null){
+                scoreboardContainer.MoveChildAfter(abilityContainer, goldenTreasuresContainer)
+            } else if (background != null) {
+                scoreboardContainer.MoveChildAfter(abilityContainer, background)
+            }
+        } else {
+            abilityContainer.RemoveAndDeleteChildren()
+            // abilityContainer.DeleteAsync(0)
+        }
+
+        let direStart = false
+        let direMarginAdded = false
+        for (let index = 0; index < avatars.length; index++) {
+
+            const element = avatars[index];
+
+            let accountID = 0
+            let steamID = 0
+
+            if (element.accountid != null) {
+                accountID = element.accountid
+            }
+
+            if (element.steamid != null) {
+                steamID = element.steamid
+            }
+
+            if (accountID == 0) {
+                accountID = index
+            }
+
+            let playerID = GetPlayerIDBySteamID(steamID)
+            let entityID = Players.GetPlayerHeroEntityIndex( playerID )
+
+            if (element.FindAncestor("DireTeamContainer")) {
+                direStart = true
+            }
+
+            //show mmr
+            if (index == 0 ) {
+                let mmrLabel = $.CreatePanel("Label", mmrContainer, "")
+                if (mmrLabel != null) {
+                    mmrLabel.text = "MMR"
+                    mmrLabel.style["height"] = labelHeight + "px"
+                    mmrLabel.style["min-width"] = "75px"
+                    mmrLabel.style["text-align"] = "center"
+                    mmrLabel.style["horizontal-align"] = "center"
+                    mmrLabel.style["vertical-align"] = "center"
+                    mmrLabel.style["color"] = "#afd2e3"
+                    mmrLabel.style["font-weight"] = "bold"
+                    mmrLabel.style["font-size"] = "16px"
+                    mmrLabel.style["line-height"] = "30px"
+                    mmrLabel.style["border-bottom"] = "1px solid #5C616A"
+                }
+            }
+
+            let playerMMRContainer = mmrContainer.FindChildTraverse("PlayerMMR_" + accountID)
+
+            if (playerMMRContainer == null) {
+                playerMMRContainer = $.CreatePanel("Label", mmrContainer, "PlayerMMR_" + accountID)
+                playerMMRContainer.style["height"] = cellHeight + "px"
+                playerMMRContainer.style["margin-top"] = "2px"
+                playerMMRContainer.style["margin-bottom"] = "1px"
+                playerMMRContainer.style["min-width"] = "75px"
+                playerMMRContainer.style["padding"] = "0 5px"
+                playerMMRContainer.style["vertical-align"] = "center"
+                playerMMRContainer.style["text-align"] = "center"
+                playerMMRContainer.style["line-height"] = "45px"
+                playerMMRContainer.style["font-size"] = "22px"
+
+                if (direStart && !direMarginAdded) {
+                    playerMMRContainer.style["margin-top"] = "30px"
+                }
+
+                playerMMRContainer.text = 0
+
+                if (steamID == 0) {
+                    playerMMRContainer.text = ""
+                }
+
+            } else {
+                playerMMRContainer.RemoveAndDeleteChildren()
+            }
+
+            let playerStats = CustomNetTables.GetTableValue( "players_info", playerID.toString() );
+            if (playerStats != null ) {
+                if (typeof(playerStats["mmr"]) !== "undefined") {
+                    playerMMRContainer.text = playerStats["mmr"]
+                }
+            }
+
+            //show opened golden treasures
+            if (index == 0 ) {
+                let goldenTreasuresLabel = $.CreatePanel("Label", goldenTreasuresContainer, "")
+                if (goldenTreasuresLabel != null) {
+                    goldenTreasuresLabel.text = "OT"
+                    goldenTreasuresLabel.style["height"] = labelHeight + "px"
+                    goldenTreasuresLabel.style["width"] = "100%"
+                    goldenTreasuresLabel.style["text-align"] = "center"
+                    goldenTreasuresLabel.style["horizontal-align"] = "center"
+                    goldenTreasuresLabel.style["vertical-align"] = "center"
+                    goldenTreasuresLabel.style["color"] = "#afd2e3"
+                    goldenTreasuresLabel.style["font-weight"] = "bold"
+                    goldenTreasuresLabel.style["font-size"] = "16px"
+                    goldenTreasuresLabel.style["line-height"] = "30px"
+                    goldenTreasuresLabel.style["border-bottom"] = "1px solid #5C616A"
+
+                    goldenTreasuresLabel.SetPanelEvent("onmouseover", function(){
+                        $.DispatchEvent("UIShowTextTooltip", goldenTreasuresLabel, "#DOTA_HUD_Opened_Treasures_Tooltip")
+                    })
+                    
+                    goldenTreasuresLabel.SetPanelEvent("onmouseout", function(){
+                        $.DispatchEvent("UIHideTextTooltip")
+                    })
+                }
+            }
+            let playerGoldTreasure = goldenTreasuresContainer.FindChildTraverse("PlayerGoldenTreasures_" + accountID)
+
+            if (playerGoldTreasure == null) {
+                playerGoldTreasure = $.CreatePanel("Label", goldenTreasuresContainer, "PlayerGoldenTreasures_" + accountID)
+                playerGoldTreasure.style["height"] = cellHeight + "px"
+                playerGoldTreasure.style["margin-top"] = "2px"
+                playerGoldTreasure.style["margin-bottom"] = "1px"
+                playerGoldTreasure.style["min-width"] = "50px"
+                playerGoldTreasure.style["padding"] = "0 5px"
+                playerGoldTreasure.style["vertical-align"] = "center"
+                playerGoldTreasure.style["text-align"] = "center"
+                playerGoldTreasure.style["line-height"] = "45px"
+                playerGoldTreasure.style["font-size"] = "22px"
+
+                playerGoldTreasure.text = 0
+
+                if (steamID == 0) {
+                    playerGoldTreasure.text = ""
+                }
+
+                if (direStart && !direMarginAdded) {
+                    playerGoldTreasure.style["margin-top"] = "30px"
+                }
+
+            } else {
+                playerGoldTreasure.RemoveAndDeleteChildren()
+            }
+
+            if (playerStats != null ) {
+                if (typeof(playerStats["upgrade_treasures_opened"]) !== "undefined") {
+                    playerGoldTreasure.text = playerStats["upgrade_treasures_opened"]
+                }
+            }
+
+            //show picked abilities
+            if (index == 0 ) {
+                let abilitiesLabel = $.CreatePanel("Label", abilityContainer, "")
+                if (abilitiesLabel != null) {
+                    abilitiesLabel.text = "ABILITIES"
+                    abilitiesLabel.style["height"] = labelHeight + "px"
+                    abilitiesLabel.style["width"] = "100%"
+                    abilitiesLabel.style["text-align"] = "center"
+                    abilitiesLabel.style["horizontal-align"] = "center"
+                    abilitiesLabel.style["vertical-align"] = "center"
+                    abilitiesLabel.style["color"] = "#afd2e3"
+                    abilitiesLabel.style["font-weight"] = "bold"
+                    abilitiesLabel.style["font-size"] = "16px"
+                    abilitiesLabel.style["line-height"] = "30px"
+                    abilitiesLabel.style["border-bottom"] = "1px solid #5C616A"
+                }
+            }
+
+            let playerAbilityContainer = abilityContainer.FindChildTraverse("PlayerPickedAbilities_" + accountID)
+
+            if (playerAbilityContainer == null) {
+                playerAbilityContainer = $.CreatePanel("Panel", abilityContainer, "PlayerPickedAbilities_" + accountID)
+                playerAbilityContainer.style["flow-children"] = "right"
+                playerAbilityContainer.style["height"] = cellHeight + "px"
+                playerAbilityContainer.style["margin-top"] = "2px"
+                playerAbilityContainer.style["margin-bottom"] = "1px"
+                playerAbilityContainer.style["padding"] = "0 5px"
+                playerAbilityContainer.style["horizontal-align"] = "center"
+                playerAbilityContainer.style["vertical-align"] = "center"
+
+                if (direStart && !direMarginAdded) {
+                    playerAbilityContainer.style["margin-top"] = "30px"
+                    direMarginAdded = true
+                }
+
+            } else {
+                playerAbilityContainer.RemoveAndDeleteChildren()
+            }
+
+            let pickedAbilities = CustomNetTables.GetTableValue( "players_ability_picks_2", accountID );
+
+            if (pickedAbilities != null) {
+                let pickedAbilitiesData = Object.values(pickedAbilities)
+    
+                for (let index = 0; index < pickedAbilitiesData.length; index++) {
+                    const abilityData = pickedAbilitiesData[index];
+                    const abilityName = abilityData["ability_name"] || ""; 
+    
+                    if ( abilityName != ""){
+                        let container = $.CreatePanel("Panel", playerAbilityContainer, "")
+                        if (container != null) {
+                            container.style["margin-right"] = "2px"
+                            container.style["border-radius"] = "5px"
+                            container.style["border"] = "2px solid grey"
+                            container.style["margin-top"] = "5px"
+                            let abilityPanel = $.CreatePanel("DOTAAbilityImage", container, "");
+    
+                            if (abilityPanel != null) {
+                                abilityPanel.hittest = true
+                                abilityPanel.abilityname = abilityName
+                                abilityPanel.style["width"] = "50px"
+    
+                                abilityPanel.SetPanelEvent("onmouseover", function () {
+                                    $.DispatchEvent("DOTAShowAbilityTooltipForEntityIndex", abilityPanel, abilityName, entityID );
+                                });
+    
+                                abilityPanel.SetPanelEvent("onmouseout", function () {
+                                    $.DispatchEvent("DOTAHideAbilityTooltip");
+                                });
+                            }
+    
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+function OnHideAbilityTooltip(panel)
+{
+    AddSpellUpgradeInfo("", -1, true)
+    AddAbilitySpecialUpgradeInfo("", true)
+}
+
+(function()
+{
+    if (!EVENTS_REGISTERED) {
+        $.RegisterForUnhandledEvent("DOTAHUDShowAghsStatusTooltip", OnScepterShardStatusTooltip);
+        $.RegisterForUnhandledEvent("DOTAShowAbilityTooltip", OnAbilityTooltip);
+        $.RegisterForUnhandledEvent("DOTAShowAbilityTooltipForEntityIndex", OnAbilityTooltipForEntity);
+        $.RegisterForUnhandledEvent("DOTAShowAbilityShopItemTooltip", OnAbilityShopItemTooltip);
+        $.RegisterForUnhandledEvent("DOTAShowDroppedItemTooltip", OnAbilityTooltipDroppedItem);
+        $.RegisterForUnhandledEvent("DOTAHideAbilityTooltip", OnHideAbilityTooltip);
+        
+        $.RegisterForUnhandledEvent("DOTAHudUpdate", OnDotaHudUpdate);
+
+        EVENTS_REGISTERED = true
+    }
+
+    $.DispatchEvent("DOTAHUDToggleScoreboard")
+
+    $.Schedule(0.1, function(){
+        FixScoreboard()
+        $.DispatchEvent("DOTAHUDHideScoreboard")
+
+        if (SCOREBOARD_PANEL) {
+            SCOREBOARD_PANEL.SetHasClass("ScoreboardClosed", true)
+        }
+
+        SCOREBOARD_FIXED = true
+    })
+})();
+
+

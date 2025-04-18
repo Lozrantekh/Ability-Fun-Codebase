@@ -1,0 +1,255 @@
+"use strict";
+
+var AllUsedUnregisteredKeyBindsRestored = false
+
+var cosmeticAbilities = [
+    "seasonal_diretide2020_high_five",
+    "high_five_custom_sb_2023",
+    "summon_mount",
+
+    "open_map_ability_sb_2023",
+]
+
+var potionsAbility = [
+    //fillers
+    "filler_potion_ability_slot_1_sb_2023",
+    "filler_potion_ability_slot_2_sb_2023",
+    "filler_potion_ability_slot_3_sb_2023",
+    "filler_potion_ability_slot_4_sb_2023",
+
+    //real potions
+    "potion_sb_2023_elite_creeps_represser",
+    "potion_sb_2023_purification",
+    "potion_sb_2023_dragon_tears",
+]
+
+var cosmeticAbilityOrder = 1000
+
+var forbiddenAbilityList = []
+
+function UpdateAbilitySlotsKeybind(sortAbilities)
+{
+    let keyBindsPanel = $( "#CustomKeyBindWrapperContent" );
+    if (keyBindsPanel == null)
+    {
+        return;
+    }
+
+    keyBindsPanel.GetParent().GetParent().SetHasClass("NoSpells", false)
+    
+    let localPlayerID = Game.GetLocalPlayerID()
+
+    if (localPlayerID == null || localPlayerID == -1) {
+        return
+    }
+
+    let counter = 0
+    let visibleAbilityNumber = -1
+    let queryUnit = Players.GetPlayerHeroEntityIndex( localPlayerID)
+
+    let potionsCounter = 0
+
+    if (queryUnit != null) {
+            // update all the panels
+        for ( let i = 0; i < Entities.GetAbilityCount( queryUnit ); ++i )
+        {
+            let abilityIndex = Entities.GetAbility( queryUnit, i );
+
+            //ability removed
+            if ( abilityIndex == null || abilityIndex == -1 ) {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+
+            //broken ability ? no name
+            let abilityName = Abilities.GetAbilityName(abilityIndex)
+            if ( abilityName == null || abilityName == "") {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+
+            if (Abilities.IsAttributeBonus( abilityIndex)) {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+            
+            if ( Abilities.IsDisplayedAbility(abilityIndex)) {
+                visibleAbilityNumber = visibleAbilityNumber + 1
+            }
+            
+            //hidden ability
+            if ( !Abilities.IsDisplayedAbility(abilityIndex) && !cosmeticAbilities.includes(abilityName) && !potionsAbility.includes(abilityName)) {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+
+            //forbidden
+            if ( forbiddenAbilityList.includes(abilityName)) {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+
+            if (Abilities.IsPassive(abilityIndex)) {
+                RemoveNotUsedKeyBindSlot(i)
+                continue;
+            }
+
+            counter++;
+
+            if ( potionsAbility.includes(abilityName)) {
+                potionsCounter++;
+            }
+
+            let currentKeyBind = keyBindsPanel.FindChildTraverse("keybind_slot_" + i)
+
+            if( currentKeyBind == null){
+                // create a new panel
+                currentKeyBind = $.CreatePanel( "Panel", keyBindsPanel, "keybind_slot_" + i );
+
+                if (currentKeyBind != null) {
+                    currentKeyBind.BLoadLayout( "file://{resources}/layout/custom_game/custom_key_binding_bar_slot.xml", false, false );
+
+                    currentKeyBind.SetAttributeInt("AbilityOrder", counter)
+                    currentKeyBind.SetHasClass("AbilityOrder_" + counter, true)
+                    
+                    currentKeyBind.Data().MakeRandomString = MakeRandomString
+                    currentKeyBind.Data().UpdatePlayerExtraInfo = UpdatePlayerExtraInfo
+                    currentKeyBind.Data().HideExtraPlayerInfo = HideExtraPlayerInfo
+                    currentKeyBind.Data().GetHUDPanelByID = GetHUDPanelByID
+                    currentKeyBind.Data().GetMainHUDPanel = GetMainHUDPanel
+
+                    let isCosmeticAbility = cosmeticAbilities.includes(abilityName) || potionsAbility.includes(abilityName)
+                    
+                    //set current ability
+                    currentKeyBind.Data().SetKeyBindSlot(i, abilityIndex, visibleAbilityNumber, isCosmeticAbility);
+                }
+
+            } else {
+                currentKeyBind.Data().UpdateKeyBindSlotAbilityIndex(abilityIndex, visibleAbilityNumber);    
+
+                let previousAbilityOrder = currentKeyBind.GetAttributeInt("AbilityOrder", -1)
+
+                if (previousAbilityOrder != -1) {
+                    currentKeyBind.SetHasClass("AbilityOrder_" + previousAbilityOrder, false)
+                }
+                
+                currentKeyBind.SetAttributeInt("AbilityOrder", counter)
+                currentKeyBind.SetHasClass("AbilityOrder_" + counter, true)
+            }
+
+            let slotNumberLabel = currentKeyBind.FindChildTraverse("customKeyBindSlotNumber")
+            if (slotNumberLabel) {
+                let text = "Slot " + Number(visibleAbilityNumber + 1)
+
+                if (cosmeticAbilities.includes(abilityName)) {
+                    text = "Extra"
+                    currentKeyBind.SetAttributeInt("AbilityOrder", cosmeticAbilityOrder)
+                    currentKeyBind.SetHasClass("AbilityOrder_" + cosmeticAbilityOrder, true)
+                    currentKeyBind.SetHasClass("CosmeticAbility", true)
+
+                    cosmeticAbilityOrder++;
+                }
+
+                if ( potionsAbility.includes(abilityName)) {
+                    text = "POTION " + Number(potionsCounter)
+                }
+
+                slotNumberLabel.text = text
+            }
+        }
+    }
+
+    if (sortAbilities) {
+        SortSlots()
+    }
+    
+    $.Schedule(0.1, function(){
+        if (keyBindsPanel.GetChildCount() == 0 ){
+            keyBindsPanel.GetParent().GetParent().SetHasClass("NoSpells", true)
+        } 
+    })
+}
+
+function RemoveNotUsedKeyBindSlot(slot)
+{
+    let keyBindsPanel = $( "#CustomKeyBindWrapperContent" );
+    if (keyBindsPanel == null)
+    {
+        return;
+    }
+
+    //check if there is keybind panel for this ability (player could remove ability in some game mods)
+    let emptySlot = keyBindsPanel.FindChildTraverse("keybind_slot_" + slot)
+    if (emptySlot != null) {
+
+        if (!emptySlot.Data().HasSlotCustomKeyBind()) {
+            emptySlot.DeleteAsync(0)
+        } else {
+            emptySlot.Data().UpdateKeyBindSlotAbilityIndex(-1);
+        }
+    }
+}
+
+function SortSlots()
+{
+    let parent =  $( "#CustomKeyBindWrapperContent" );
+
+    if (parent != null) {
+        let allSlots = parent.FindChildrenWithClassTraverse("CustomKeyBindRoot")
+
+        if (allSlots != null && parent != null) {
+            for (let index = 0; index < allSlots.length; index++) {
+                const element = allSlots[index];
+    
+                let abilityOrder = element.GetAttributeInt("AbilityOrder", 9999)
+    
+                if (abilityOrder !== null) {
+                    let keybindSlotBefore = parent.FindChildrenWithClassTraverse("AbilityOrder_" + Number(abilityOrder - 1))
+    
+                    if (keybindSlotBefore != null && keybindSlotBefore.length > 0) {
+                        parent.MoveChildAfter(element, keybindSlotBefore[0])
+                    }
+                }
+            }
+
+            //move extra abilities on the end
+            let cosmeticAbilities = parent.FindChildrenWithClassTraverse("CosmeticAbility")
+
+            if (cosmeticAbilities != null) {
+                let parentLastChild = parent.GetChild(parent.GetChildCount() - 1)
+                let lastMovedCosmetic = null
+
+                if (parentLastChild != null) {
+                    for (let index = 0; index < cosmeticAbilities.length; index++) {
+                        const element = cosmeticAbilities[index];
+    
+                        if (lastMovedCosmetic == null) {
+                            parent.MoveChildAfter(element, parentLastChild)
+                        } else {
+                            let lastMovedCosmeticOrderID = lastMovedCosmetic.GetAttributeInt("AbilityOrder", 9999)
+                            let currentCosmeticOrderID = element.GetAttributeInt("AbilityOrder", 9999)
+
+                            if (currentCosmeticOrderID > lastMovedCosmeticOrderID) {
+                                parent.MoveChildAfter(element, lastMovedCosmetic)
+                            } else {
+                                parent.MoveChildBefore(element, lastMovedCosmetic)
+                            }
+                        }
+
+                        lastMovedCosmetic = element
+                    }
+                }
+            }
+        }
+    }
+}
+
+(function()
+{
+    $.GetContextPanel().Data().UpdateAbilitySlotsKeybind = UpdateAbilitySlotsKeybind
+
+    GameEvents.Subscribe( "dota_portrait_ability_layout_changed", function() {UpdateAbilitySlotsKeybind(true)} );
+    GameEvents.Subscribe( "dota_ability_changed", function() {UpdateAbilitySlotsKeybind(false)} );
+    
+    UpdateAbilitySlotsKeybind(false); // initial update
+})();

@@ -1,0 +1,15 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/keybinds.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/custom_key_binding_bar_v2.vjs_c" />
+    </scripts>
+    <Panel class="CustomKeyBindWrapperRoot" hittest="true">
+        <Label id="CustomKeyBindsEmpty" text="No Active Abilities!" />
+        <Panel id="CustomKeyBindWrapperContent" />
+    </Panel>
+</root>

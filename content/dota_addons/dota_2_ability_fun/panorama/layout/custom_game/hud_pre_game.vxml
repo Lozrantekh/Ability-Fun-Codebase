@@ -1,0 +1,9 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles />
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/pre_game_strategy.vjs_c" />
+    </scripts>
+    <Panel class="PreGameCustomRoot" />
+</root>

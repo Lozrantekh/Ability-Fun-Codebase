@@ -1,0 +1,13 @@
+"use strict";
+
+GameEvents.Subscribe( "game_rules_state_change", HidePickScreen );
+
+function HidePickScreen() {
+    
+    var dotaHud = $.GetContextPanel().GetParent().GetParent();
+    if (Game.GameStateIsBefore(DOTA_GameState.DOTA_GAMERULES_STATE_HERO_SELECTION)) {
+        dotaHud.FindChild("PreGame").style["opacity"] = 0;
+    } else {
+        dotaHud.FindChild("PreGame").style["opacity"] = 1;
+    }
+}

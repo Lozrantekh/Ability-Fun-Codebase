@@ -1,0 +1,269 @@
+"use strict";
+var LastLoadedCategory = null;
+
+CustomNetTables.SubscribeNetTableListener( "player_cosmetic_inventory", function() {LoadCosmeticInventoryCategory(LastLoadedCategory)} )
+
+function GetCosmeticInventoryLabelByID(id)
+{
+    let cosmeticInventoryCategoriesLabel = new Map([
+        ['CosmeticInventoryEmblems', 'emblems'],
+        ['CosmeticInventoryLastHitEffect', 'last hit effects'],
+        ['CosmeticInventoryAttackModifier', 'attack modifiers'],
+        ['CosmeticInventoryGamePremium', 'premium'],
+        ['CosmeticInventoryMounts', 'mounts'],
+        ['CosmeticInventoryItems', 'prestige items'],
+        ['CosmeticInventoryMusic', 'music'],
+        ['CosmeticInventoryHighFives', 'high fives'],
+        ['CosmeticInventoryHats', 'masks'],
+    ]);
+        
+    let result = cosmeticInventoryCategoriesLabel.get(id);
+    
+    return result
+}
+
+function GetCosmeticInventoryCategoryNameByID(id)
+{
+    let cosmeticInventoryCategoriesLabel = new Map([
+        ['CosmeticInventoryEmblems', 'emblems'],
+        ['CosmeticInventoryLastHitEffect', 'last_hit_effects'],
+        ['CosmeticInventoryAttackModifier', 'attack_modifiers'],
+        ['CosmeticInventoryGamePremium', 'premium'],
+        ['CosmeticInventoryMounts', 'mounts'],
+        ['CosmeticInventoryItems', 'prestige_items'],
+        ['CosmeticInventoryMusic', 'music'],
+        ['CosmeticInventoryHighFives', 'high_fives'],
+        ['CosmeticInventoryHats', 'hats'],
+    ]);
+        
+    let result = cosmeticInventoryCategoriesLabel.get(id);
+    
+    return result
+}
+
+function SelectCosmeticInventoryCategory(categoryID)
+{
+    let categoryPanel = $("#" + categoryID)
+
+    if (categoryPanel !== null) {
+        let cosmeticInventoryCategories = $("#CosmeticInventoryLeftPart" );
+        let cosmeticInventoryIemsContainer = $("#CosmeticInventoryRightPart" );
+
+        if (cosmeticInventoryIemsContainer === null) {
+            return;
+        }
+
+        let allCategories = cosmeticInventoryCategories.FindChildrenWithClassTraverse("CosmeticInventoryCategory")
+
+        for (let index = 0; index < allCategories.length; index++) {
+            const element = allCategories[index];
+
+            element.SetHasClass("Selected", false)
+            
+        }
+
+        categoryPanel.SetHasClass("Selected", true)
+
+        let cosmeticInventoryItemsLabel = cosmeticInventoryIemsContainer.FindChildTraverse("CosmeticInventoryCategoryLabel")
+        cosmeticInventoryItemsLabel.text = GetCosmeticInventoryLabelByID(categoryID)
+
+        LoadCosmeticInventoryCategory(categoryID)
+    }
+}
+
+function LoadCosmeticInventoryCategory(categoryID)
+{
+    if (categoryID === null) {
+        return
+    }
+
+    let cosmeticInventoryItemsContainer = $("#CosmeticInventoryItemsContainer" );
+    cosmeticInventoryItemsContainer.RemoveAndDeleteChildren()
+  
+    let onlyPreview = false
+    let playerInfo = CustomNetTables.GetTableValue( "players_info", Players.GetLocalPlayer().toString() );
+    let itemsData = CustomNetTables.GetTableValue( "player_cosmetic_inventory", Players.GetLocalPlayer().toString() );
+
+
+    if (typeof(itemsData) === "null" || typeof(itemsData) === "undefined") {
+        let emptyInventoryInfo = $.CreatePanel('Panel', cosmeticInventoryItemsContainer, 'test');
+    
+        if (emptyInventoryInfo != null) {
+            emptyInventoryInfo.BLoadLayout("file://{resources}/layout/custom_game/patron_instructions_tooltip.xml", false, false);
+            emptyInventoryInfo.SetDialogVariable("description", $.Localize("#Cosmetic_Inventory_Empty_Description"))
+
+            let joinDesc = emptyInventoryInfo.FindChildTraverse("JoinPatronSecondDescription")
+            if (joinDesc != null) {
+                joinDesc.visible = false
+            }
+
+            if (typeof(playerInfo) != "undefined" && typeof(playerInfo) != "null") {
+                let dotaAccountID = playerInfo["account_id"]
+
+                let accountIdPanel = cosmeticInventoryItemsContainer.FindChildTraverse("CosmeticInventoryNoItemsAccountID")
+                if (accountIdPanel != null) {
+                    accountIdPanel.text = dotaAccountID
+                }
+            } 
+        }
+
+        let itemsToUnlockLabel = $.CreatePanel('Label', emptyInventoryInfo, '');
+        if (itemsToUnlockLabel != null)  {
+            itemsToUnlockLabel.SetHasClass("CosmeticIventoryNoItemPreview", true)
+            itemsToUnlockLabel.text = "Items to Unlock:"
+        }
+
+        itemsData = CustomNetTables.GetTableValue( "player_cosmetic_inventory", "promo" );
+        onlyPreview = true
+    }
+
+    if (itemsData == null) {
+        return
+    }
+
+    let cosmeticInventoryCategoryName = GetCosmeticInventoryCategoryNameByID(categoryID)
+    let itemsCategoryData = itemsData[cosmeticInventoryCategoryName]
+
+    if (typeof(itemsCategoryData) === "null" || typeof(itemsCategoryData) === "undefined") {
+        return;
+    }
+
+    let itemsDataArray = Object.values(itemsCategoryData)
+
+    if (itemsDataArray == null) {
+        return
+    }
+
+    LastLoadedCategory = categoryID
+
+    itemsDataArray.sort(function(a, b) {
+        let keyA = new Date(a.orderID)
+        let keyB = new Date(b.orderID)
+
+        if (keyA < keyB) return -1;
+        if (keyA > keyB) return 1;
+
+        return 0;
+      });
+
+    for ( let i in itemsDataArray ) 
+    {   
+        let item = itemsDataArray[i];
+
+        let itemID = item["id"] || -1
+        let itemCategory = item["category"] || ""
+        let itemStatus = item["status"] || 0;
+        let itemActivated = false
+
+        if (typeof(item["activated"]) !== "undefined" && item["activated"] == 1) {
+            itemActivated = true
+        }
+
+        let newCosmeticInventoryItem = $.CreatePanel('Panel', cosmeticInventoryItemsContainer, '');
+    
+        newCosmeticInventoryItem.BLoadLayoutSnippet('SingleCosmeticInventoryItem');
+
+        let itemImage = newCosmeticInventoryItem.FindChildrenWithClassTraverse("CosmeticInventoryItemImage")[0];
+        if (typeof(itemImage) !== "null" && typeof(itemImage) !== "undefined") {
+            itemImage.SetImage(item["image"])
+        }
+
+
+        let itemName = newCosmeticInventoryItem.FindChildrenWithClassTraverse("CosmeticInventoryItemLabel")[0];
+        if (typeof(itemName) !== "null" && typeof(itemName) !== "undefined") {
+            itemName.text = item["name"]
+        }
+
+
+        if (item["hero_name"]) {
+            let itemHeroWearerImage = newCosmeticInventoryItem.FindChildrenWithClassTraverse("CosmeticInventoryItemHeroWearerImage")[0];
+            if (typeof(itemHeroWearerImage) !== "null" && typeof(itemHeroWearerImage) !== "undefined") {
+                itemHeroWearerImage.heroname = item["hero_name"]
+                itemHeroWearerImage.SetHasClass("Visible", true)
+            }
+        }
+
+        let itemEquipButton = newCosmeticInventoryItem.FindChildrenWithClassTraverse("CosmeticInventoryEquipLabel")[0];
+        if (typeof(itemEquipButton) !== "null" && typeof(itemEquipButton) !== "undefined") {
+
+            if (!onlyPreview) {
+                if (itemStatus == 0) {
+                    itemEquipButton.text = "Equip"
+    
+                    newCosmeticInventoryItem.SetHasClass("Equipped", false)
+    
+                    itemEquipButton.GetParent().SetPanelEvent("onactivate", function(){
+                        EquipCosmeticItem(itemID, itemCategory, 1)
+                    })
+                } else if (itemStatus == 1) {
+                    itemEquipButton.text = "Unequip"
+    
+                    newCosmeticInventoryItem.SetHasClass("Equipped", true)
+    
+                    itemEquipButton.GetParent().SetPanelEvent("onactivate", function(){
+                        EquipCosmeticItem(itemID, itemCategory, 0)
+                    })
+                }
+    
+                if (itemActivated) {
+                    itemEquipButton.text = "Active"
+                    itemEquipButton.GetParent().ClearPanelEvent("onactivate")
+                    newCosmeticInventoryItem.SetHasClass("Equipped", true)
+                    newCosmeticInventoryItem.SetHasClass("Activated", true)
+    
+                    let valuePanel = newCosmeticInventoryItem.FindChildTraverse("CosmeticInventoryItemValue")
+                    if (valuePanel != null) {
+                        valuePanel.text = item["value"]
+                    }
+                }
+            } else {
+                newCosmeticInventoryItem.SetHasClass("OnlyPreview", true)
+                newCosmeticInventoryItem.SetHasClass("Equipped", false)
+
+                if (itemActivated) {
+                    newCosmeticInventoryItem.SetHasClass("Activated", true)
+                }
+                
+                itemEquipButton.text = "LOCKED"
+
+                let valuePanel = newCosmeticInventoryItem.FindChildTraverse("CosmeticInventoryItemValue")
+                if (valuePanel != null) {
+                    valuePanel.text = item["value"]
+                }
+
+                // itemEquipButton.GetParent().SetPanelEvent("onactivate", function(){
+                //     $.DispatchEvent("BrowserGoToURL", 'https://discord.gg/hQzzRZtkSy')
+                // })
+            }
+        }
+
+        let itemType = newCosmeticInventoryItem.FindChildrenWithClassTraverse("CosmeticInventoryItemHeroTypeLabel")[0];
+        if (typeof(itemType) !== "null" && typeof(itemType) !== "undefined") {
+            itemType.text = GetCosmeticInventoryLabelByID(categoryID)
+        }
+    }
+
+    if (categoryID == "CosmeticInventoryItems")
+    {
+        let emptyInventoryInfo = $.CreatePanel('Panel', cosmeticInventoryItemsContainer, '');
+    
+        if (emptyInventoryInfo != null) {
+            emptyInventoryInfo.BLoadLayoutSnippet('CosmeticInventoryPrestigeItemsInfo');
+            emptyInventoryInfo.SetHasClass("CosmeticInventoryPrestigeItemsInfo", true)
+        }
+    }
+}
+
+function EquipCosmeticItem(itemID, itemCategory, status)
+{
+    let localPlayer = Game.GetLocalPlayerID()
+
+    if (status == 1) {
+        GameEvents.SendCustomGameEventToServer( "cosmetic_inventory_equip_item", {"player_id":localPlayer, "id":itemID, "category":itemCategory});
+    } else if (status == 0) {
+
+        GameEvents.SendCustomGameEventToServer( "cosmetic_inventory_unequip_item", {"player_id":localPlayer, "id":itemID, "category":itemCategory});
+    }
+}
+
+SelectCosmeticInventoryCategory("CosmeticInventoryEmblems")

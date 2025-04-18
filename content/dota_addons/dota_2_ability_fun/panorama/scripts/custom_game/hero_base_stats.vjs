@@ -1,0 +1,42 @@
+"use strict";
+
+function SetupTooltip()
+{       
+    let types = {
+        base_str: "string",
+        base_agi: "string",
+        base_int: "string",
+        str_per_level: "string",
+        agi_per_level: "string",
+        int_per_level: "string",
+        damage_min: "number",
+        damage_max: "number",
+        attack_rate: "string",
+        attack_range: "number",
+        projectile_speed: "number",
+        armor: "string",
+        magic_resistance:"number",
+        movement_speed: "number",
+        turn_rate: "string",
+        day_sight_range:"number",
+        night_sight_range:"number",
+        max_health:"number",
+        health_regen: "string",
+        max_mana: "number",
+        mana_regen: "string",
+    }
+
+
+    for (const key in types) {
+        const type = types[key];
+
+        let value = $.GetContextPanel().GetAttributeString(key, "0")
+
+        if (type == "number" && !isNaN(value)) {
+            $.GetContextPanel().SetDialogVariableInt(key, Number(value))
+        } else if (type == "string") {
+            $.GetContextPanel().SetDialogVariableLocString(key, value)
+        }
+
+    }
+}

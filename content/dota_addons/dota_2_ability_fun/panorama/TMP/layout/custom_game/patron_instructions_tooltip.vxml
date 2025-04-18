@@ -1,0 +1,42 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/hudstyles.vcss_c" />
+        <include src="s2r://panorama/styles/hud/hud_reborn.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/hud_main.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/patron_instructions_tooltip.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/patron_instructions_tooltip.vjs_c" />
+    </scripts>
+    <Panel class="CosmeticInventoryNoItemsInfo">
+        <Label class="CosmeticInventoryNoItemsInfoLabel" text="{s:description}" />
+        <Panel class="CosmeticInventoryNoItemsLinks">
+            <Panel class="SupporterLink Patreon" html="true" onactivate="BrowserGoToURL(&apos;https://www.patreon.com/dota2keymillo&apos;)" hittest="true" />
+            <Panel class="SupporterLink Boosty" html="true" onactivate="BrowserGoToURL(&apos;https://boosty.to/dota2keymil&apos;)" hittest="true" />
+            <Panel class="SupporterLink Kofi" html="true" onactivate="BrowserGoToURL(&apos;https://ko-fi.com/keymillodev&apos;)" hittest="true" />
+            <Panel class="SupporterLink Paypal" html="true" onactivate="BrowserGoToURL(&apos;https://www.paypal.com/paypalme/dota2keymil&apos;)" hittest="true" />
+        </Panel>
+        <Label class="CosmeticInventoryNoItemsChinese" html="true" text="#Patreon_Chinese_Players" />
+        <Label class="CosmeticInventoryNoItemsRussian" html="true" text="#Patreon_Russian_Players" />
+        <Panel class="CosmeticInventoryNoItemsPatronInfo">
+            <Panel id="CosmeticInventoryNoItemsAccountWrapper">
+                <Label class="CosmeticInventoryNoItemsAccountLabel" html="true" text="#Cosmetic_Inventory_Account_ID" />
+                <Label id="CosmeticInventoryNoItemsAccountID" html="true" text="{s:account_id}" onactivate="CopyAccountID(&apos;CosmeticInventoryNoItemsAccountID&apos;)" oncontextmenu="CopyAccountID(&apos;CosmeticInventoryNoItemsAccountID&apos;)" />
+            </Panel>
+            <Panel class="CosmeticInventoryNoItemsInstructions">
+                <Label class="PatronInstructions" text="#Patrons_Instruction_1" />
+                <Label class="PatronInstructions" html="true" text="#Patrons_Instruction_2" />
+                <Label class="PatronInstructions" text="#Patrons_Instruction_3" />
+                <Label class="PatronInstructions" text="#Patrons_Instruction_4" />
+                <Panel class="PatronInstructions PatronInstructionsDiscord">
+                    <Label class="PatronInstructions" text="#Patrons_Instruction_5" />
+                    <Panel class="SupporterLink MiniLink" html="true" onactivate="BrowserGoToURL(&apos;https://discord.gg/hQzzRZtkSy&apos;)" hittest="true" />
+                </Panel>
+            </Panel>
+        </Panel>
+        <Label id="JoinPatronSecondDescription" class="CosmeticInventoryNoItemsInfoLabel" text="{s:description2}" />
+    </Panel>
+</root>

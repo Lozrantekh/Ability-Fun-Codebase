@@ -1,0 +1,353 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/hudstyles.vcss_c" />
+        <include src="s2r://panorama/styles/hud/dota_hud_pregame.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/hero_selection.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/hud_main.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/utils.vjs_c" />
+        <include src="s2r://panorama/scripts/custom_game/hero_selection.vjs_c" />
+    </scripts>
+    <Panel class="HeroAbilitySelectionWrapper" hittest="true" onactivate="BlockPickHeroScreen()">
+        <Panel id="HeroPickingScreen">
+            <Panel class="HeroPickListWrapper">
+                <Panel id="PartyTeamWrapper">
+                    <Panel id="TeamsPartyContainerRoot">
+                        <Panel id="TeamsPartyContainer">
+                            <Panel id="TeamRadiantContainer" />
+                            <Panel id="TeamDireContainer" />
+                        </Panel>
+                        <DOTAScenePanel id="HeroPickBackground" map="backgrounds/pregame_phase" hittest="false" />
+                    </Panel>
+                    <Image class="PartyTeamVersusImg" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/events/muerta/versus_screen/target_vs_english_png.vtex" />
+                </Panel>
+                <Panel id="StartGameCountdownTimer">
+                    <Image id="TimerRing" src="s2r://panorama/images/status_icons/timer_ring_psd.vtex" />
+                    <Label id="StartGameCounterLabel" text="" />
+                    <Panel id="StartGameCounterLabelLocked">
+                        <Image class="" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/profile/icon_locked_psd.vtex" />
+                        <Label text="Locked" />
+                    </Panel>
+                </Panel>
+                <Panel class="HeroPickLabelWrapper">
+                    <DOTAScenePanel id="HeroPickLabelEffect" map="backgrounds/accept_popup_test" camera="shot_camera" hittest="false" />
+                    <Label id="HeroPickSelectLabel" hittest="false" text="Choose Your Hero!" />
+                </Panel>
+                <Panel class="HeroOptionsWrapper">
+                    <Panel class="PatronRerollImgWrapper HeroRerollWrapper" onactivate="RerollHeroes()">
+                        <Image class="PatronRerollImg" scaling="stretch-to-cover-preserve-aspect" src="s2r://panorama/images/compendium/international2020/underdraft/reroll_png.vtex" />
+                        <Panel class="PatronRerollCounterWrapper">
+                            <Label id="PatronRerollHeroesCounter" text="0" />
+                        </Panel>
+                    </Panel>
+                    <Panel id="HeroPickList">
+                        <Panel class="HeroPickOption" id="Hero_0" hittest="false" onactivate="SelectHero(&apos;Hero_0&apos;)">
+                            <DOTAScenePanel class="HeroSelectEffect" map="scenes/shining_default" camera="shot_camera" hittest="false" />
+                            <DOTAScenePanel class="HeroPickOptionPortrait" id="Hero_Portrait_0" particleonly="false" hittest="true" environment="full_body" drawbackground="false" allowrotation="false" />
+                            <Panel class="HeroPickNameWrapper">
+                                <Label id="Hero_Name_0" class="HeroPickNameLabel" text="" />
+                            </Panel>
+                            <Panel class="HeroPrimaryAttr HeroAttrStr" onmouseover="ShowBaseHeroStatsTooltip(&apos;Hero_Name_0&apos;)" onmouseout="UIHideCustomLayoutTooltip(&apos;HeroBaseStatsTooltip&apos;);" />
+                            <Panel id="HeroBaseTreeTalents_0" class="HeroBaseTreeTalents" onmouseover="ShowBaseHeroTreeTalents(&apos;HeroBaseTreeTalents_0&apos;);" onmouseout="DOTAHUDHideStatBranchTooltip();" />
+                            <Panel class="HeroConfirmButton" id="ConfirmHero_0" onactivate="ConfirmSelectedHero()">
+                                <Panel class="HeroConfirmSet">
+                                    <Image class="HeroConfirmIcon" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/control_icons/check_shadow_png.vtex" />
+                                    <Label class="HeroConfirmLabel" text="Confirm" />
+                                </Panel>
+                            </Panel>
+                        </Panel>
+                        <Panel class="HeroPickOption" id="Hero_1" hittest="true" onactivate="SelectHero(&apos;Hero_1&apos;)">
+                            <DOTAScenePanel class="HeroSelectEffect" map="scenes/shining_default" camera="shot_camera" hittest="false" />
+                            <DOTAScenePanel class="HeroPickOptionPortrait" id="Hero_Portrait_1" particleonly="false" hittest="true" environment="full_body" drawbackground="false" allowrotation="false" />
+                            <Panel class="HeroPickNameWrapper">
+                                <Label id="Hero_Name_1" class="HeroPickNameLabel" text="" />
+                            </Panel>
+                            <Panel class="HeroPrimaryAttr HeroAttrAgi" onmouseover="ShowBaseHeroStatsTooltip(&apos;Hero_Name_1&apos;)" onmouseout="UIHideCustomLayoutTooltip(&apos;HeroBaseStatsTooltip&apos;);" />
+                            <Panel id="HeroBaseTreeTalents_1" class="HeroBaseTreeTalents" onmouseover="ShowBaseHeroTreeTalents(&apos;HeroBaseTreeTalents_1&apos;);" onmouseout="DOTAHUDHideStatBranchTooltip();" />
+                            <Panel class="HeroConfirmButton" id="ConfirmHero_1" onactivate="ConfirmSelectedHero()">
+                                <Panel class="HeroConfirmSet">
+                                    <Image class="HeroConfirmIcon" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/control_icons/check_shadow_png.vtex" />
+                                    <Label class="HeroConfirmLabel" text="Confirm" />
+                                </Panel>
+                            </Panel>
+                        </Panel>
+                        <Panel class="HeroPickOption" id="Hero_2" hittest="true" onactivate="SelectHero(&apos;Hero_2&apos;)">
+                            <DOTAScenePanel class="HeroSelectEffect" map="scenes/shining_default" camera="shot_camera" hittest="false" />
+                            <DOTAScenePanel class="HeroPickOptionPortrait" id="Hero_Portrait_2" particleonly="false" hittest="true" environment="full_body" drawbackground="false" allowrotation="false" />
+                            <Panel class="HeroPickNameWrapper">
+                                <Label id="Hero_Name_2" class="HeroPickNameLabel" text="" />
+                            </Panel>
+                            <Panel class="HeroPrimaryAttr HeroAttrInt" onmouseover="ShowBaseHeroStatsTooltip(&apos;Hero_Name_2&apos;)" onmouseout="UIHideCustomLayoutTooltip(&apos;HeroBaseStatsTooltip&apos;);" />
+                            <Panel id="HeroBaseTreeTalents_2" class="HeroBaseTreeTalents" onmouseover="ShowBaseHeroTreeTalents(&apos;HeroBaseTreeTalents_2&apos;);" onmouseout="DOTAHUDHideStatBranchTooltip();" />
+                            <Panel class="HeroConfirmButton" id="ConfirmHero_2" onactivate="ConfirmSelectedHero()">
+                                <Panel class="HeroConfirmSet">
+                                    <Image class="HeroConfirmIcon" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/control_icons/check_shadow_png.vtex" />
+                                    <Label class="HeroConfirmLabel" text="Confirm" />
+                                </Panel>
+                            </Panel>
+                        </Panel>
+                        <Panel class="HeroPickOption" id="Hero_3" hittest="true" onactivate="SelectHero(&apos;Hero_3&apos;)">
+                            <DOTAScenePanel class="HeroSelectEffect" map="scenes/shining_default" camera="shot_camera" hittest="false" />
+                            <DOTAScenePanel class="HeroPickOptionPortrait" id="Hero_Portrait_3" particleonly="false" hittest="true" environment="full_body" drawbackground="false" allowrotation="false" />
+                            <Panel class="HeroPickNameWrapper">
+                                <Label id="Hero_Name_3" class="HeroPickNameLabel" text="" />
+                            </Panel>
+                            <Panel class="HeroPrimaryAttr HeroAttrAll" onmouseover="ShowBaseHeroStatsTooltip(&apos;Hero_Name_3&apos;)" onmouseout="UIHideCustomLayoutTooltip(&apos;HeroBaseStatsTooltip&apos;);" />
+                            <Panel id="HeroBaseTreeTalents_3" class="HeroBaseTreeTalents" onmouseover="ShowBaseHeroTreeTalents(&apos;HeroBaseTreeTalents_3&apos;);" onmouseout="DOTAHUDHideStatBranchTooltip();" />
+                            <Panel class="HeroConfirmButton" id="ConfirmHero_3" onactivate="ConfirmSelectedHero()">
+                                <Panel class="HeroConfirmSet">
+                                    <Image class="HeroConfirmIcon" scaling="stretch-to-fit-preserve-aspect" src="s2r://panorama/images/control_icons/check_shadow_png.vtex" />
+                                    <Label class="HeroConfirmLabel" text="Confirm" />
+                                </Panel>
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                </Panel>
+                <Panel class="BottomLine" />
+                <Panel class="BottomLine2" />
+            </Panel>
+        </Panel>
+        <Panel id="AbilityPickingScreen">
+            <Panel id="AbilityPickingTopPanel">
+                <Panel id="AbilityPickingOrderWrapper">
+                    <Panel id="AbilityPlayerCurrentPick" />
+                    <Panel id="AbilityPickingOrder" />
+                </Panel>
+            </Panel>
+            <Panel id="AbilityPickingCenterPanel">
+                <Panel id="AbilityScepterShardUpgrades">
+                    <Panel id="AbilityScepterUpgrade">
+                        <Panel id="AbilityScepterUpgradeImage" />
+                        <Panel class="AbilityUpgradeInfo">
+                            <Panel id="AbilityScepterUpgradeExtraAbility">
+                                <DOTAAbilityImage id="AbilityScepterExtraAbilityImg" />
+                                <Panel class="AbilityShardExtraAbilityName">
+                                    <Label class="AbilityUpgradeExtraAbilityLabel" text="New Ability" />
+                                    <Label id="AbilityScepterExtraAbilityLabel" text="" />
+                                </Panel>
+                            </Panel>
+                            <Label id="AbilityScepterUpgradeLabel" html="true" text="" />
+                        </Panel>
+                    </Panel>
+                    <Panel id="AbilityShardUpgrade">
+                        <Panel id="AbilityShardUpgradeImage" />
+                        <Panel class="AbilityUpgradeInfo">
+                            <Panel id="AbilityShardUpgradeExtraAbility">
+                                <DOTAAbilityImage id="AbilityShardExtraAbilityImg" />
+                                <Panel class="AbilityShardExtraAbilityName">
+                                    <Label class="AbilityUpgradeExtraAbilityLabel" text="New Ability" />
+                                    <Label id="AbilityShardExtraAbilityLabel" text="" />
+                                </Panel>
+                            </Panel>
+                            <Label id="AbilityShardUpgradeLabel" html="true" text="" />
+                        </Panel>
+                    </Panel>
+                </Panel>
+                <Panel class="ChatTipBox AbilityPickingSetupChat" hittest="true">
+                    <DOTAChat id="Chat" class="PreGameChat" chatstyle="hudpregame" />
+                </Panel>
+                <Panel id="PlayersWrapperMain" hittest="false">
+                    <Panel id="PlayersRadiantContainer" />
+                    <Panel id="PlayersDireContainer" />
+                </Panel>
+                <Panel id="TalentsWrapperMain">
+                    <Panel class="PatronRerollImgWrapper" onactivate="RerollTalents()">
+                        <Image class="PatronRerollImg" scaling="stretch-to-cover-preserve-aspect" src="s2r://panorama/images/compendium/international2020/underdraft/reroll_png.vtex" />
+                        <Panel class="PatronRerollCounterWrapper">
+                            <Label id="PatronRerollTalentCounter" text="0" />
+                        </Panel>
+                    </Panel>
+                    <Panel id="AbilityTalentsWrapper">
+                        <Panel class="AbilityTalentsMainLabel">
+                            <Label class="AbilityOptionsLabel TalentTreeLabel" text="Build your Talent Tree" />
+                        </Panel>
+                        <Label class="TalentBuilderInfo" text="Drag Icons To Slots" />
+                        <Panel id="AbilityTalentsContainerRoot">
+                            <Panel class="AbilityTalentsContainer">
+                                <Panel class="AbilityTalentsLabelWrapper level_4">
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_4&apos;, &apos;left&apos;)" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperLeft">
+                                        <Label class="PlayerChosenTalent PlayerTalentLeft" id="PlayerChosenTalent8" text="LEFT" hittest="false" />
+                                    </Panel>
+                                    <Label class="AbilityTalentsLabel" text="25" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperRight">
+                                        <Label class="PlayerChosenTalent PlayerTalentRight" id="PlayerChosenTalent7" text="RIGHT" hittest="false" />
+                                    </Panel>
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_4&apos;, &apos;right&apos;)" />
+                                </Panel>
+                                <Panel id="AbilityTalentsLevel4" />
+                            </Panel>
+                            <Panel class="AbilityTalentsContainer">
+                                <Panel class="AbilityTalentsLabelWrapper level_3">
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_3&apos;, &apos;left&apos;)" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperLeft">
+                                        <Label class="PlayerChosenTalent PlayerTalentLeft" id="PlayerChosenTalent6" text="LEFT" hittest="false" />
+                                    </Panel>
+                                    <Label class="AbilityTalentsLabel" text="20" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperRight">
+                                        <Label class="PlayerChosenTalent PlayerTalentRight" id="PlayerChosenTalent5" text="RIGHT" hittest="false" />
+                                    </Panel>
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_3&apos;, &apos;right&apos;)" />
+                                </Panel>
+                                <Panel id="AbilityTalentsLevel3" />
+                            </Panel>
+                            <Panel class="AbilityTalentsContainer">
+                                <Panel class="AbilityTalentsLabelWrapper level_2">
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_2&apos;, &apos;left&apos;)" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperLeft">
+                                        <Label class="PlayerChosenTalent PlayerTalentLeft" id="PlayerChosenTalent4" text="LEFT" hittest="false" />
+                                    </Panel>
+                                    <Label class="AbilityTalentsLabel" text="15" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperRight">
+                                        <Label class="PlayerChosenTalent PlayerTalentRight" id="PlayerChosenTalent3" text="RIGHT" hittest="false" />
+                                    </Panel>
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_2&apos;, &apos;right&apos;)" />
+                                </Panel>
+                                <Panel id="AbilityTalentsLevel2" />
+                            </Panel>
+                            <Panel class="AbilityTalentsContainer">
+                                <Panel class="AbilityTalentsLabelWrapper level_1">
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_1&apos;, &apos;left&apos;)" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperLeft">
+                                        <Label class="PlayerChosenTalent PlayerTalentLeft" id="PlayerChosenTalent2" text="LEFT" hittest="false" />
+                                    </Panel>
+                                    <Label class="AbilityTalentsLabel" text="10" />
+                                    <Panel class="PlayerChosenTalentWrapper WrapperRight">
+                                        <Label class="PlayerChosenTalent PlayerTalentRight" id="PlayerChosenTalent1" text="RIGHT" hittest="false" />
+                                    </Panel>
+                                    <Panel class="RemovePlayerTalent" onactivate="RemovePlayerSelectedTalent(&apos;level_1&apos;, &apos;right&apos;)" />
+                                </Panel>
+                                <Panel id="AbilityTalentsLevel1" />
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                    <Image class="InfoTooltip" src="s2r://panorama/images/status_icons/information_psd.vtex" onmouseover="UIShowTextTooltip( #DOTA_Ability_Draft_hud_talents_picks)" onmouseout="UIHideTextTooltip();" />
+                </Panel>
+                <Panel id="AbilityOptionsContainerRoot">
+                    <Panel id="AbilityOptionsContainer">
+                        <Panel id="AbilityPickingInfo">
+                            <Label id="AbilityPickingInfoLabel" text="" />
+                            <Label id="AbilityPickingInfoTimer" text="" />
+                        </Panel>
+                        <Panel class="AbilityOptionsContents">
+                            <Panel class="AbilityOptionsLabelWrapper">
+                                <Label class="AbilityOptionsLabel FirstLabel" text="- Ultimate abilities -" />
+                            </Panel>
+                            <Panel id="AbilityOptionsUltimate" />
+                            <Panel class="AbilityOptionsLabelWrapper">
+                                <Label class="AbilityOptionsLabel" text="- Base abilities - " />
+                            </Panel>
+                            <Panel id="AbilityOptionsBase" />
+                            <Panel class="AbilityOptionsLabelWrapper">
+                                <Label class="AbilityOptionsLabel" text="- Jungle abilities -" />
+                            </Panel>
+                            <Panel id="AbilityOptionsJungle" />
+                            <Panel id="AbilityOptionsTalent">
+                                <Panel id="AbilityOptionsTalentLevel1" />
+                                <Panel id="AbilityOptionsTalentLevel2" />
+                                <Panel id="AbilityOptionsTalentLevel3" />
+                                <Panel id="AbilityOptionsTalentLevel4" />
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                    <Panel id="AbilityPickingExtraPickCountInfo">
+                        <Image class="InfoTooltip" src="s2r://panorama/images/status_icons/information_psd.vtex" onmouseover="UIShowTextTooltip( #DOTA_Ability_Draft_hud_extra_ability_picks )" onmouseout="UIHideTextTooltip();" />
+                        <Panel class="AbilityPickingRoundInfo">
+                            <Label id="AbilityPickingExtraPickCountLabel" html="true" text="Round Number:" />
+                            <Panel class="AbilityPickingExtraPickCountWrapper">
+                                <Label id="AbilityPickingExtraPickCount" html="true" text="" />
+                            </Panel>
+                        </Panel>
+                    </Panel>
+                </Panel>
+            </Panel>
+        </Panel>
+        <Button id="DashboardButton" onactivate="DOTAHUDShowDashboard();" />
+        <Button id="SettingsButton" onactivate="DOTAShowSettingsPopup();" />
+        <Panel id="DraggingIconsContainer" />
+        <Panel hittest="false" id="ImageCache">
+            <Image src="s2r://panorama/images/background_5_png.vtex" />
+        </Panel>
+    </Panel>
+    <snippets>
+        <snippet name="PlayerPickingAbility">
+            <Panel class="PlayerAbilityWrapper">
+                <Panel class="PartyTeamColor" />
+                <Panel class="PlayerAbilityPortraitWrapper" />
+                <Panel class="PlayerAbilityMainWrapper">
+                    <Panel class="PlayerAbilityHeroInfo">
+                        <Panel class="PlayerAbilityHeroName">
+                            <Label class="PlayerAbilityHeroNameLabel" text="Hero Name" />
+                        </Panel>
+                        <Panel class="PlayerAbilityPlayerInfo">
+                            <DOTAAvatarImage class="PlayerAbilityPlayerAvatar" />
+                            <Label class="PlayerAbilityPlayerName" text="PlayerName" />
+                        </Panel>
+                    </Panel>
+                    <Panel class="PlayerPickedAbilityWrapper" />
+                </Panel>
+            </Panel>
+        </snippet>
+        <snippet name="AghsScepterNewAbilitySnippet">
+            <Panel class="InsetContainer GrantedAbility">
+                <Panel class="DetailsContainer">
+                    <DOTAAbilityImage id="ScepterAbilityImage" scaling="stretch-to-cover-preserve-aspect" showtooltip="false" />
+                    <Panel class="AbilityInfo">
+                        <Panel class="AbilityTypeTitle">
+                            <Label class="AbilityName" html="true" text="{s:scepter_granted_ability}" />
+                            <Label class="TypeTitle" text="#DOTA_AbilityTooltip_Aghs_New_Ability" />
+                        </Panel>
+                        <Label class="AbilityDescription" text="{s:scepter_upgrade_description}" html="true" />
+                        <Label class="AghsScepterAbilityCharges" text="#DOTA_AbilityTooltip_AbilityCharges" html="true" />
+                        <Label class="AbilitySpecialKeys" text="{s:scepter_ability_keys}" html="true" />
+                        <Panel id="AbilityCosts">
+                            <Label id="AbilityCooldown" class="Cooldown" text="#DOTA_AbilityTooltip_Cooldown" html="true" />
+                            <Label id="AbilityManaCost" class="ManaCost" text="#DOTA_AbilityTooltip_ManaCost" html="true" />
+                        </Panel>
+                    </Panel>
+                </Panel>
+            </Panel>
+        </snippet>
+        <snippet name="AghsScepterSnippet">
+            <Panel class="InsetContainer">
+                <Panel class="DetailsContainer">
+                    <DOTAAbilityImage id="ScepterAbilityImage" scaling="stretch-to-cover-preserve-aspect" showtooltip="false" />
+                    <Panel class="AbilityInfo">
+                        <Panel class="AbilityTypeTitle">
+                            <Label class="AbilityName" html="true" text="{s:scepter_granted_ability}" />
+                            <Label class="TypeTitle" text="#DOTA_AbilityTooltip_Upgrade" />
+                        </Panel>
+                        <Label class="AbilityDescription" text="{s:scepter_upgrade_description}" html="true" />
+                        <Label class="AbilitySpecialKeys" text="{s:scepter_ability_keys}" html="true" />
+                    </Panel>
+                </Panel>
+            </Panel>
+        </snippet>
+        <snippet name="InlineScepterHeader">
+            <Panel class="InlineScepterHeader">
+                <Panel id="AghsStatusScepterContainer">
+                    <Panel id="AghsStatusScepterIcon" />
+                    <DOTAParticleScenePanel id="AghsStatusScepterScene" particleonly="true" cameraOrigin="400 0 0" lookAt="180 0 0" fov="20" hittest="false" />
+                </Panel>
+                <Label class="AghsTitle" text="#DOTA_AbilityTooltip_Aghs_Scepter" />
+            </Panel>
+        </snippet>
+        <snippet name="InlineShardHeader">
+            <Panel class="InlineShardHeader">
+                <Panel id="AghsStatusShardContainer">
+                    <Panel id="AghsStatusShardIcon" />
+                    <DOTAParticleScenePanel id="AghsStatusShardScene" particleonly="true" cameraOrigin="400 0 0" lookAt="180 0 0" fov="20" hittest="false" />
+                </Panel>
+                <Label class="AghsTitle" text="#DOTA_AbilityTooltip_Aghs_Shard" />
+            </Panel>
+        </snippet>
+        <snippet name="NoUpgradeSnippet">
+            <Panel class="NoChildrenLabel">
+                <Label text="#DOTA_AbilityTooltip_No_Aghs_Upgrade_Found" />
+            </Panel>
+        </snippet>
+    </snippets>
+</root>

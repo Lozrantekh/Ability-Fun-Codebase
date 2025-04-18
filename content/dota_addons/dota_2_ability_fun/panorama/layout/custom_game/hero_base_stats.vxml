@@ -1,0 +1,89 @@
+<!-- xml reconstructed by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io -->
+<root>
+    <styles>
+        <include src="s2r://panorama/styles/dotastyles.vcss_c" />
+        <include src="s2r://panorama/styles/hudstyles.vcss_c" />
+        <include src="s2r://panorama/styles/dashboard_page_shared.vcss_c" />
+        <include src="s2r://panorama/styles/hero_stat_icons.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/hero_base_stats.vcss_c" />
+        <include src="s2r://panorama/styles/custom_game/dashboard_page_hero_old_ver.vcss_c" />
+    </styles>
+    <scripts>
+        <include src="s2r://panorama/scripts/custom_game/hero_base_stats.vjs_c" />
+    </scripts>
+    <Panel class="HeroBaseStatsContainer" hittest="false" ontooltiploaded="SetupTooltip()">
+        <Panel id="HeroBaseStats">
+            <Panel class="HeroStatsSectionWrapper">
+                <Panel class="HeroStatsSection">
+                    <Label class="HeroStatsHeader" text="#DOTA_HeroStats_Castegory_Attributes" />
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon StrengthIcon" />
+                        <Label class="MonoNumbersFont" text="#DOTA_HeroLoadout_StrengthAttribute" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon AgilityIcon" />
+                        <Label class="MonoNumbersFont" text="#DOTA_HeroLoadout_AgilityAttribute" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon IntelligenceIcon" />
+                        <Label class="MonoNumbersFont" text="#DOTA_HeroLoadout_IntelligenceAttribute" />
+                    </Panel>
+                </Panel>
+                <Panel class="HeroStatsSection">
+                    <Label class="HeroStatsHeader" text="#DOTA_HeroStats_Castegory_Attack" />
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon DamageIcon" />
+                        <Label class="MonoNumbersFont" text="{d:damage_min} - {d:damage_max}" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon BaseAttackTimeIcon" />
+                        <Label class="MonoNumbersFont" text="{s:attack_rate}" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon AttackRangeIcon" />
+                        <Label class="MonoNumbersFont" text="{d:attack_range}" />
+                    </Panel>
+                    <Panel id="ProjectileSpeedRow" class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon ProjectileSpeedIcon" />
+                        <Label class="MonoNumbersFont" text="{d:projectile_speed}" />
+                    </Panel>
+                </Panel>
+            </Panel>
+            <Panel class="HeroStatsSectionWrapper">
+                <Panel class="HeroStatsSection">
+                    <Label class="HeroStatsHeader" text="#DOTA_HeroStats_Castegory_Defense" />
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon ArmorIcon" />
+                        <Label class="MonoNumbersFont" text="{s:armor}" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon MagicResistIcon" />
+                        <Label class="MonoNumbersFont" text="{d:magic_resistance}%" />
+                    </Panel>
+                </Panel>
+                <Panel class="HeroStatsSection">
+                    <Label class="HeroStatsHeader" text="#DOTA_HeroStats_Castegory_Mobility" />
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon MovementSpeedIcon" />
+                        <Label class="MonoNumbersFont" text="{d:movement_speed}" />
+                    </Panel>
+                    <Panel class="HeroStatsRow">
+                        <Panel class="HeroStatsIcon TurnRateIcon" />
+                        <Label class="MonoNumbersFont" text="{s:turn_rate}" />
+                    </Panel>
+                </Panel>
+            </Panel>
+            <Panel class="HeroStatsSection StatsWider">
+                <Label class="HeroStatsHeader" text="#DOTA_HeroStats_Castegory_HealthMana" />
+                <Panel id="HealthRow" class="HeroResourceRow">
+                    <Label class="MaxResource MonoNumbersFont" text="{d:max_health}" />
+                    <Label class="ResourceRegen MonoNumbersFont" text="+{s:health_regen}" />
+                </Panel>
+                <Panel id="ManaRow" class="HeroResourceRow">
+                    <Label class="MaxResource MonoNumbersFont" text="{d:max_mana}" />
+                    <Label class="ResourceRegen MonoNumbersFont" text="+{s:mana_regen}" />
+                </Panel>
+            </Panel>
+        </Panel>
+    </Panel>
+</root>

@@ -1,0 +1,363 @@
+/* Prettified by Source 2 Viewer 10.2.0.0 - https://valveresourceformat.github.io */
+
+.HudMainRootContainer
+{
+    width: 100%;
+    height: 100%;
+}
+
+#TopPanelIconsWrapper
+{
+    flow-children:right;
+    margin-left: 150px;
+    margin-top: 12px;
+    background-color: rgba(53, 53, 53, 0.801);
+    padding: 2px;
+    border-radius: 5px;
+}
+
+.TopMenuButtons
+{
+    width: 28px;
+    height: 28px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: 50%;
+    opacity: 0.85;
+    wash-color:rgb(216, 216, 216);
+    tooltip-position:bottom;
+    margin-right: 0px;
+}
+
+#PlayerCustomKeyBindsButton
+{
+    margin-top: 0px;
+    background-image: url("s2r://panorama/images/key_illustration_png.vtex");
+    brightness:1.25;
+}
+
+#ConnectionStatusIcon
+{
+    background-image: url("s2r://panorama/images/control_icons/refresh_psd.vtex");
+    background-size: 90%;
+}
+
+#LeaderboardIcon
+{
+    background-image: url("s2r://panorama/images/control_icons/stats_icon_png.vtex");
+    background-size: 90%;
+}
+
+#SupporterIcon
+{
+    background-image: url("s2r://panorama/images/topbar/armory_icon_white_png.vtex");
+    background-size: 140%;
+    margin-top: 1px;
+}
+
+#ConnectionStatusIcon.Reconnecting
+{
+    animation-name: rotating;
+    animation-duration: 0.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function:linear;
+}
+
+.TopMenuButtons:hover
+{
+    opacity: 1;
+    wash-color:white;
+}
+
+#SupporterIcon:hover
+{
+    opacity: 1;
+    wash-color:white;
+    brightness:4;
+}
+
+#TopRankMMRWrapper
+{
+    margin-top: 120px;
+    height: 700px;
+    width: 550px;
+    background-image: url("s2r://panorama/images/custom_game/mmr_rank_bg_png.vtex");
+    background-size: 100% 99.7%;
+    border-bottom: 2px solid rgb(24, 24, 24);
+    background-repeat: no-repeat;
+    border-radius: 10px;
+    flow-children:down;
+    padding-bottom: 50px;
+    transform: translateX(-750px);
+    opacity: 0;
+    transition-property: transform, opacity;
+    transition-duration: 0.25s;
+    transition-timing-function: ease-in-out;
+}
+
+#TopRankMMRWrapper.Visible
+{
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.TopRankMMRLabel
+{
+    horizontal-align:center;
+    margin-top: 30px;
+    color:rgb(134, 134, 134);
+    font-size: 20px;
+}
+
+#TopRankMMRPlayersWrapper
+{
+    width: 75%;
+    margin-top: 20px;
+    horizontal-align:center;
+    border: 2px solid grey;
+    flow-children:down;
+    overflow: clip scroll;
+}
+
+.TopRankMMRPlayer
+{
+    flow-children:right;
+    border-bottom: 1px solid grey;
+    width: 100%;
+    padding: 2px 0;
+}
+
+.TopRankMMRPlayerPosition
+{
+    width: 35px;
+    vertical-align: center;
+}
+
+.TopRankMMRPlayerAvatar
+{
+    width: 25px;
+    height: 25px;
+    vertical-align: center;
+    margin-left: 5px;
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+.TopRankMMRPlayerName
+{
+    vertical-align: bottom;
+    width: 250px;
+    height: 25px;
+    padding-top: 2px;
+}
+
+.TopRankMMRPlayerNumber
+{
+    vertical-align: center;
+    horizontal-align:right;
+    margin-right: 20px;
+}
+
+#TalentColumnFixed
+{
+    width: 20px;
+}
+
+#PlayerExtraInfoPanel
+{
+    horizontal-align: middle;
+    vertical-align: bottom;
+    margin-bottom: 200px;
+    opacity: 0;
+    background-color: rgba(0, 0, 0, 0.95);
+    flow-children:right;
+    padding: 5px;
+    padding-right: 10px;
+    transition-property: opacity, box-shadow;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in-out;
+    z-index: 500;
+}
+
+#PlayerExtraInfoPanel.GoldenStyle
+{
+    padding: 10px 20px;
+    background-image: url("s2r://panorama/images/background_6_png.vtex");
+    background-size: 100%;
+    background-repeat: no-repeat;
+}
+
+#PlayerExtraInfoPanel.Effect1,#PlayerExtraInfoPanel.Effect2
+{
+    background-color: rgba(0, 0, 0, 0.99);
+}
+
+#PlayerExtraInfoPanel.Visible
+{
+    opacity: 1;
+}
+
+#PlayerExtraInfoPanel.KeybindInfo
+{
+    transform: translateY(-32px) scale3d(0.95, 0.95, 0);
+}
+
+#PlayerExtraInfoPanel.KeybindWarning
+{
+    box-shadow: inset 0 0 2px 1px rgba(255, 61, 61, 0.575);
+    padding: 10px;
+}
+
+#AbilityExtraInfoImage,#ArtifactItemImageLevelUp,#StatusExtraInfoImage
+{
+    vertical-align: center;
+    horizontal-align:center;
+}
+
+#StatusExtraInfoImage
+{
+    padding-right: 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+#AbilityExtraInfoImage.Hidden,#ArtifactItemImageLevelUp.Hidden,#StatusExtraInfoImage.Hidden
+{
+    opacity: 1;
+    visibility: collapse;
+}
+
+.PlayerExtraInfoImageWrapper
+{
+    margin: 2px;
+    width: 45px;
+    vertical-align: center;
+}
+
+#PlayerExtraInfoPanelLabel
+{
+    vertical-align: middle;
+    color:white;
+    font-size: 20px;
+    margin-left: 10px;
+}
+
+#PlayerExtraInfoPanelLabel.Error
+{
+    background-color: rgba(70, 0, 0, 0.85);
+    color:white;
+    padding: 2px 5px;
+    font-size: 24px;
+}
+
+#CustomCosmeticInventoryRoot
+{
+    transform: translateX(-1000px);
+    opacity: 0;
+}
+
+#CustomCosmeticInventoryRoot.Visible
+{
+    opacity: 1;
+    transform: translateX(0);
+}
+
+#TopPanelInfo
+{
+    horizontal-align: right;
+    margin-top: 60px;
+    flow-children: right;
+}
+
+#JungleCreepTreasuresLimitRoot
+{
+    flow-children:down;
+    background-color: gradient( linear, 0% 0%, 100% 0%, from( #00000000 ), color-stop( .5, #3d4a53d2 ), to( #4e616dbb ) );
+    padding: 2px 5px;
+}
+
+#JungleCreepTreasuresTitle
+{
+    width: 100%;
+    margin-bottom: 2px;
+    color:rgb(199, 228, 154);
+    font-size: 14px;
+    text-align: center;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 1px 2 #00000099;
+}
+
+#JungleCreepTreasuresEnemyLabel
+{
+    color:rgb(216, 136, 136);
+    width: 100%;
+    text-shadow: 1px 1px 1px 1.0 #00000099;
+    text-align: center;
+    font-size: 14px;
+    visibility: collapse;
+}
+
+#JungleCreepTreasuresEnemyLabel.Visible
+{
+    visibility: visible;
+}
+
+#JungleCreepTreasuresValues,#JungleCreepTreasuresValuesEnemy
+{
+    flow-children:right;
+    horizontal-align:center;
+}
+
+#JungleCreepTreasuresValuesEnemy
+{
+    visibility: collapse;
+}
+
+#JungleCreepTreasuresValuesEnemy.Visible
+{
+    visibility: visible;
+}
+
+#JungleCreepTreasuresDropped,#JungleCreepTreasuresLimit
+{
+    flow-children:down;
+    width: 75px;
+    tooltip-position: left bottom;
+}
+
+#JungleCreepTreasuresLimitCount,#JungleCreepTreasuresDroppedCount,#JungleCreepTreasuresDroppedCountEnemy,#JungleCreepTreasuresLimitCountEnemy
+{
+    horizontal-align:center;
+    color:orange;
+    font-size: 16px;
+    text-shadow: 1px 1px 1px 1.25 #00000099;
+}
+
+#JungleCreepTreasuresLimitCount,#JungleCreepTreasuresLimitCountEnemy
+{
+    color:rgb(255, 50, 50);
+}
+
+.JungleCreepsTreasuresSlash
+{
+    height: 75%;
+    vertical-align: center;
+    width: 2px;
+    background-color: rgb(199, 199, 199);
+    margin: 0 5px;
+}
+
+@keyframes 'rotating'
+{
+    0%
+    {
+        pre-transform-rotate2d:0deg;
+    }
+    
+    100%
+    {
+        pre-transform-rotate2d:180deg;
+    }
+    
+}
+

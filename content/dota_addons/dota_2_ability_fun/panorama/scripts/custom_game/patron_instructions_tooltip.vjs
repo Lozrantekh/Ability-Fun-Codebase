@@ -1,0 +1,13 @@
+"use strict";
+
+function CopyAccountID(panelID)
+{
+    let panel = $("#" + panelID)
+    if (panel != null) {
+        let accountID = panel.text
+
+        if (accountID != null) {
+            CopyText(accountID, panelID)
+        }
+    }
+}
