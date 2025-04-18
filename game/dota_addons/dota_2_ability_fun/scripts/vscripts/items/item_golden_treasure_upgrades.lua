@@ -1,0 +1,1 @@
+item_golden_treasure_upgrades = class({})
