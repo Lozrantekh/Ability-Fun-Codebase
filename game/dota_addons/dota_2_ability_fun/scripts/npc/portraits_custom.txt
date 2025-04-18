@@ -1,0 +1,83 @@
+"Portraits"
+{
+    	"models/props_generic/chest_treasure_02_open.vmdl"
+	{
+		"PortraitLightPosition"           "136.42 131.87 166.72"
+        "PortraitLightAngles"            "15.77 251.82 0.00"
+        "PortraitLightFOV"                "69"
+        "PortraitLightDistance"            "377"
+        "PortraitLightColor"            "217 254 251"
+        "PortraitShadowColor"            "25 38 0"
+        "PortraitShadowScale"            "5.000000"
+        "PortraitAmbientColor"            "126 25 38"
+        "PortraitAmbientScale"            "5.000000"
+        "PortraitSpecularColor"            "251 74 84"
+        "PortraitBackgroundTexture"        "materials/portraits_card/portrait_backgrounds/witch_doctor.vmat"
+        "PortraitBackgroundColor1"        "1 .5 .3"
+        "PortraitBackgroundColor2"        "0 .1 0"
+        "PortraitBackgroundColor3"        "1 0 0"
+        "PortraitBackgroundColor4"        "1 0 0"
+        "PortraitLightScale"            "1.800000"
+        "PortraitGroundShadowScale"        "1.500000"
+        "PortraitAmbientDirection"        "-14.090 -6.340 8.790"
+		"PortraitAnimationActivity"		"ACT_DOTA_CAPTURE"
+		"PortraitAnimationCycle"		"1.000000"
+		"PortraitAnimationRate"		"1.000000"
+		"PortraitHideHero"		"0"
+		"PortraitHideParticles"		"0"
+		"PortraitHideDropShadow"		"0"
+		"PortraitDesaturateParticles"		"0"
+		"cameras"
+		{
+			"default"
+			{
+              	"PortraitPosition"		"-180 0 200"
+				"PortraitAngles"		"35 0 2"
+				"PortraitFOV"		"40.000000"
+				"PortraitFar"		"1000.000000"
+			}
+		}
+	}
+
+	"models/creeps/n_creep_crystal_kobold/kobold_c/n_creep_crystal_kobold.vmdl"
+	{
+				"PortraitLightPosition"		"55.419998 -29.049999 196.759995"
+		"PortraitLightAngles"		"54.110001 166.169998 0.000000"
+		"PortraitLightFOV"		"90.000000"
+		"PortraitLightDistance"		"99.000000"
+		"PortraitLightColor"		"197 231 219"
+		"PortraitShadowColor"		"49 23 23"
+		"PortraitShadowScale"		"5.000000"
+		"PortraitAmbientColor"		"79 108 108"
+		"PortraitAmbientScale"		"5.000000"
+		"PortraitSpecularColor"		"251 74 84"
+		"PortraitBackgroundTexture"		"materials/vgui/hud/heroportraits/portraitbackground_courier_ground.vmat"
+		"PortraitBackgroundColor1"		"0.901961 0.913725 0.952941"
+		"PortraitBackgroundColor2"		"0.854902 1.000000 0.988235"
+		"PortraitBackgroundColor3"		"0.870588 1.000000 0.988235"
+		"PortraitBackgroundColor4"		"0.717647 0.482353 0.047059"
+		"PortraitLightScale"		"2.242000"
+		"PortraitGroundShadowScale"		"1.500000"
+		"PortraitAmbientDirection"		"-79.070 -84.150 -25.320"
+		"PortraitAnimationActivity"		"ACT_DOTA_IDLE"
+		"cameras"
+		{
+			"default"
+			{
+				"PortraitPosition"		"189.742188 -77.230988 84.128418"
+				"PortraitAngles"		"4.000015 154.760101 0.000000"
+				"PortraitFOV"		"36.000000"
+				"PortraitFar"		"1000.000000"
+			}
+		}
+		"PortraitSpecularDirection"		"0.000000 0.000000 -1.000000"
+		"PortraitSpecularPower"		"16.000000"
+		"PortraitAnimationCycle"		"0.000000"
+		"PortraitAnimationRate"		"1.000000"
+		"PortraitHideHero"		"0"
+		"PortraitHideParticles"		"0"
+		"PortraitHideDropShadow"		"0"
+		"PortraitDesaturateParticles"		"0"
+		"PortraitDesaturateHero"		"1"
+	}
+}

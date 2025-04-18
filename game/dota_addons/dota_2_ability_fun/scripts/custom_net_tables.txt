@@ -1,0 +1,30 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	custom_net_tables =
+	[
+		"selection_info",
+		"players_hero_options",
+		"players_hero_picks",
+		"players_hero_order",
+		"players_ability_picks",
+		"players_ability_picks_2",
+		"ability_options",
+		"ability_aghanim_upgrades",
+		"ability_pick_order",
+		"talent_options",
+		"players_talent_picks",
+		"players_talent_added",
+		"hero_base_stats",
+		"boosted_abilities",
+		"players_info",
+
+		"global_info",
+		"player_spell_upgrades",
+		"player_chosen_spell_upgrades",
+		"ability_shard_info",
+		"neutral_items_value_info",
+		"custom_key_binds",
+		"player_cosmetic_inventory",
+		"jungle_treasures_limit",
+	]
+}
