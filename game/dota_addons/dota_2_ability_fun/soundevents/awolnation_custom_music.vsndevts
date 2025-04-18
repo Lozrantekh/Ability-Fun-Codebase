@@ -1,0 +1,380 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	awolnation_01_custom.music.start = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.000000
+		soundlevel = 100.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/ui_startup.vsnd",
+		]
+		weights = 1.000000
+		vsnd_duration = 221.022034
+	}
+	awolnation_01_custom.music.setup = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.000000
+		soundlevel = 100.000000
+		weights = 1.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/ui_main.vsnd",
+		]
+		vsnd_duration = 222.876740
+	}
+	awolnation_01_custom.music.ui_hero_select = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.000000
+		soundlevel = 100.000000
+		weights = 1.000000
+		mixgroup = "HeroPick"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/ui_hero_select.vsnd",
+		]
+		vsnd_duration = 96.000000
+	}
+	awolnation_01_custom.music.countdown = 
+	{
+		type = "dota_update_countdown"
+		volume = 1.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/countdown.vsnd",
+		]
+		vsnd_duration = 132.075104
+	}
+	awolnation_01_custom.music.laning_01_layer_01 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 1.000000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 1.000000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 1.000000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		soundevent_layer2 = "DOTAMusic.Laning_01"
+		soundevent_layer2_on = 1.000000
+		laning_master = "DOTAMusic.Laning_01"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_01_layer_01.vsnd",
+		]
+		vsnd_duration = 118.073471
+	}
+	awolnation_01_custom.music.laning_01_layer_02 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.500000
+		remap_intensity_x2 = 0.250000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.500000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 0.750000
+		remap_intensity_y4 = 1.000000
+		soundevent_layer2 = "DOTAMusic.Laning_01"
+		soundevent_layer2_on = 1.000000
+		laning_master = "DOTAMusic.Laning_01"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_01_layer_02.vsnd",
+		]
+		vsnd_duration = 118.073471
+	}
+	awolnation_01_custom.music.laning_01_layer_03 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.000000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.100000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		soundevent_layer2 = "DOTAMusic.Laning_01"
+		soundevent_layer2_on = 1.000000
+		laning_master = "DOTAMusic.Laning_01"
+	}
+	awolnation_01_custom.music.laning_02_layer_01 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 1.000000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 1.000000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 1.000000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_02"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_02_layer_01.vsnd",
+		]
+		vsnd_duration = 104.071838
+	}
+	awolnation_01_custom.music.laning_02_layer_02 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.500000
+		remap_intensity_x2 = 0.250000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.500000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 0.750000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_02"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_02_layer_02.vsnd",
+		]
+		vsnd_duration = 104.071838
+	}
+	awolnation_01_custom.music.laning_02_layer_03 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.000000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.100000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_02"
+	}
+	awolnation_01_custom.music.laning_03_layer_01 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.660000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 0.750000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 1.000000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_03"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_03_layer_01.vsnd",
+		]
+		vsnd_duration = 107.572243
+	}
+	awolnation_01_custom.music.laning_03_layer_02 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.100000
+		remap_intensity_x2 = 0.250000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.500000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 0.750000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_03"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_03_layer_02.vsnd",
+		]
+		vsnd_duration = 107.572243
+	}
+	awolnation_01_custom.music.laning_03_layer_03 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.200000
+		remap_intensity_x1 = 0.000000
+		remap_intensity_y1 = 0.100000
+		remap_intensity_x2 = 0.500000
+		remap_intensity_y2 = 0.500000
+		remap_intensity_x3 = 0.750000
+		remap_intensity_y3 = 0.750000
+		remap_intensity_x4 = 1.000000
+		remap_intensity_y4 = 1.000000
+		laning_master = "DOTAMusic.Laning_03"
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/laning_03_layer_03.vsnd",
+		]
+		vsnd_duration = 107.572243
+	}
+	awolnation_01_custom.music.battle_01 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.300000
+		restart_time = 38.620998
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_01.vsnd",
+		]
+		start_point = 0.000000
+		end_point = 38.620998
+		syncpoints = 
+		[
+			5.517000,
+			11.034000,
+			16.552000,
+			22.069000,
+			27.586000,
+			33.103001,
+		]
+		vsnd_duration = 38.713470
+	}
+	awolnation_01_custom.music.battle_01_end = 
+	{
+		type = "dota_update_battle_end"
+		volume = 0.800000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_01_end.vsnd",
+		]
+		start_point = 0.130000
+		end_point = 7.000000
+		syncpoints = 2.448000
+		vsnd_duration = 7.053061
+	}
+	awolnation_01_custom.music.battle_02 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.900000
+		restart_time = 29.589001
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_02.vsnd",
+		]
+		start_point = 0.000000
+		end_point = 32.876999
+		syncpoints = 
+		[
+			3.288000,
+			9.863000,
+			16.438000,
+			23.014000,
+		]
+		vsnd_duration = 32.966530
+	}
+	awolnation_01_custom.music.battle_02_end = 
+	{
+		type = "dota_update_battle_end"
+		volume = 1.200000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_02_end.vsnd",
+		]
+		start_point = 3.392000
+		end_point = 10.000000
+		syncpoints = 3.392000
+		vsnd_duration = 12.068571
+	}
+	awolnation_01_custom.music.battle_03 = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.300000
+		restart_time = 30.677000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_03.vsnd",
+		]
+		start_point = 0.000000
+		end_point = 30.677000
+		syncpoints = 
+		[
+			1.805000,
+			9.023000,
+			16.240999,
+			23.459000,
+		]
+		vsnd_duration = 30.824490
+	}
+	awolnation_01_custom.music.battle_03_end = 
+	{
+		type = "dota_update_battle_end"
+		volume = 0.800000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/music/battle_03_end.vsnd",
+		]
+		start_point = 0.000000
+		end_point = 10.000000
+		syncpoints = 0.000000
+		vsnd_duration = 3.552653
+	}
+	awolnation_01_custom.stinger.respawn = 
+	{
+		type = "dota_music_respawn"
+		volume = 1.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/stingers/respawn.vsnd",
+		]
+		vsnd_duration = 8.568163
+	}
+	awolnation_01_custom.stinger.radiant_win = 
+	{
+		type = "dota_update_hero_select"
+		volume = 1.250000
+		pitch = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/stingers/radiant_win.vsnd",
+		]
+		vsnd_duration = 20.819592
+	}
+	awolnation_01_custom.stinger.dire_win = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.750000
+		pitch = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/stingers/dire_win.vsnd",
+		]
+		vsnd_duration = 16.091429
+	}
+	awolnation_01_custom.stinger.dire_lose = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.750000
+		pitch = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/stingers/dire_lose.vsnd",
+		]
+		vsnd_duration = 14.837551
+	}
+	awolnation_01_custom.stinger.radiant_lose = 
+	{
+		type = "dota_update_hero_select"
+		volume = 0.750000
+		pitch = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/music/awolnation_01/stingers/radiant_lose.vsnd",
+		]
+		vsnd_duration = 16.195919
+	}
+}

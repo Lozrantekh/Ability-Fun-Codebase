@@ -1,0 +1,1243 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:generic:version{7412167c-06e9-4698-aff2-e63eb59037e7} -->
+{
+	Draft.Timer.3 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch = 1.000000
+		soundlevel = 80.000000
+		vsnd_files = 
+		[
+			"sounds/vo/announcer/ann_custom_countdown_03.vsnd",
+		]
+		vsnd_duration = 0.862041
+	}
+	Draft.Timer.2 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch = 1.000000
+		soundlevel = 80.000000
+		vsnd_files = 
+		[
+			"sounds/vo/announcer/ann_custom_countdown_02.vsnd",
+		]
+		vsnd_duration = 0.679184
+	}
+	Draft.Timer.1 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch = 1.000000
+		soundlevel = 80.000000
+		vsnd_files = 
+		[
+			"sounds/vo/announcer/ann_custom_countdown_01.vsnd",
+		]
+		vsnd_duration = 0.757551
+	}
+	Draft.Turn.Now = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.250000
+		pitch = 1.000000
+		soundlevel = 90.000000
+		vsnd_files = 
+		[
+			"sounds/vo/announcer/ann_custom_turns_01.vsnd",
+		]
+		vsnd_duration = 1.018775
+	}
+	Draft.Current.Pick = 
+	{
+		type = "dota_src1_2d"
+		volume = 0.750000
+		pitch = 1.500000
+		soundlevel = 70.000000
+		vsnd_files = 
+		[
+			"sounds/ui/ui_draft_order_advance.vsnd",
+		]
+		vsnd_duration = 0.172676
+	}
+	Reroll.Base = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.250000
+		pitch = 1.000000
+		soundlevel = 75.000000
+		vsnd_files = 
+		[
+			"sounds/ui/economy/underdraft_reroll.vsnd",
+		]
+		vsnd_duration = 0.910792
+	}
+	Hero.Select.Confirm = 
+	{
+		type = "dota_src1_2d"
+		volume = 0.950000
+		pitch = 1.000000
+		soundlevel = 75.000000
+		vsnd_files = 
+		[
+			"sounds/ui/menu/pick_set_fav.vsnd",
+		]
+		vsnd_duration = 1.948571
+	}
+	Broodmother.LarvalParasite.Cast = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/broodmother/spiderling_cast.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "150.000000"
+		vsnd_duration = 0.921542
+	}
+	Broodmother.LarvalParasite.Impact = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/broodmother/spiderling_impact.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "78.000000"
+		mixgroup = "Weapons"
+		spread_radius = "150.000000"
+		vsnd_duration = 0.835102
+	}
+	Broodmother.LarvalParasite.Burst = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/broodmother/spiderling_hatch.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "150.000000"
+		vsnd_duration = 2.060544
+	}
+	Dungeon.SpiderBoss.Rage = 
+	{
+		type = "dota_update_default"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/broodmother/insatiable_hunger.vsnd",
+		]
+		volume = "1.500000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Ultimates"
+		volume_fade_out = "1.000000"
+		spread_radius = "300.000000"
+		vsnd_duration = 6.959524
+	}
+	EggSack.Burst = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/bristlebog/goo_target.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "84.000000"
+		mixgroup = "Weapons"
+		spread_radius = "300.000000"
+		limiter_on = "1.000000"
+		limiter_event_name = "Hero_Bristleback.ViscousGoo.Target"
+		limiter_max = "0"
+		limiter_stop_oldest = "true"
+		limiter_match_event_duration = "1.000000"
+		vsnd_duration = 4.991157
+	}
+	Spider.PoisonSpit = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/venomancer/venomancer_venomous_gale.vsnd",
+		]
+		volume = "0.500000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "150.000000"
+		vsnd_duration = 0.876054
+	}
+	Spider.PoisonSpit.Impact = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/venomancer/venomancer_venomous_gale_impact1.vsnd",
+			"sounds/weapons/hero/venomancer/venomancer_venomous_gale_impact2.vsnd",
+			"sounds/weapons/hero/venomancer/venomancer_venomous_gale_impact3.vsnd",
+		]
+		volume = "0.799805"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		distance_max = "2500.000000"
+		limiter_on = "0.000000"
+		vsnd_duration = 1.512245
+	}
+	Dungeon.Stinger06 = 
+	{
+		type = "dota_src1_2d"
+		volume = 0.700000
+		mixgroup = "Stingers"
+		vsnd_files = "sounds/music/stingers/stinger06.vsnd"
+		vsnd_duration = 7.523265
+	}
+	Item_Stonework_Pendant.Cast = 
+	{
+		type = "dota_src1_3d"
+		volume = 4.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.250000
+		soundlevel = 100.000000
+		distance_max = 1500.000000
+		rand_delay_min = 0.100000
+		rand_delay_max = 0.300000
+		limiter_on = 0.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/dawnbreaker/healing_touch_powerup.vsnd",
+		]
+		vsnd_duration = 2.942812
+	}
+	Item_Stonework_Pendant.Proc = 
+	{
+		type = "dota_src1_3d"
+		volume = 5.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.250000
+		soundlevel = 100.000000
+		distance_max = 1500.000000
+		rand_delay_min = 0.100000
+		rand_delay_max = 0.300000
+		limiter_on = 0.000000
+		vsnd_files = 
+		[
+			"sounds/ambient/newyear/firecrackers04.vsnd",
+		]
+		vsnd_duration = 1.661111
+	}
+	TempleGuardian.Awaken = 
+	{
+		type = "dota_src1_2d"
+		vsnd_files = 
+		[
+			"sounds/addons/conquest/pendulum.vsnd",
+		]
+		volume = "1.000000"
+		pitch = "1.000000"
+		event_type = "0"
+		memory_type = "0"
+		vsnd_duration = 16.561632
+	}
+	TempleGuardian.PreAttack = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/chaos_knight/chaos_bolt_cast.vsnd",
+		]
+		volume = "1.000000"
+		pitch = "0.700000"
+		soundlevel = "84.000000"
+		mixgroup = "Weapons"
+		spread_radius = "300.000000"
+		vsnd_duration = 1.454807
+	}
+	TempleGuardian.Wrath.Explosion = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/pugna/netherblast.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "600.000000"
+		vsnd_duration = 2.685351
+	}
+	TempleGuardian.Purification = 
+	{
+		type = "dota_update_default"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/omniknight/purification.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "300.000000"
+		vsnd_duration = 3.496372
+	}
+	TempleGuardian.Wrath.Cast = 
+	{
+		type = "dota_update_default"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/omniknight/guardian_cast.vsnd",
+		]
+		volume = "1.000000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Ultimates"
+		spread_radius = "600.000000"
+		vsnd_duration = 2.560408
+	}
+	TempleGuardian.HammerThrow = 
+	{
+		type = "dota_update_default"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/beastmaster/wild_axes.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "1.000000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "600.000000"
+		vsnd_duration = 1.701701
+	}
+	TempleGuardian.HammerThrow.Damage = 
+	{
+		type = "dota_update_default"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/shared/impacts/heavy_blade_impact1.vsnd",
+			"sounds/weapons/hero/shared/impacts/heavy_blade_impact2.vsnd",
+			"sounds/weapons/hero/shared/impacts/heavy_blade_impact3.vsnd",
+		]
+		volume_rand_min = "-0.099976"
+		volume_rand_max = "0.099976"
+		volume = "0.699585"
+		pitch_rand_min = "-0.100000"
+		pitch_rand_max = "0.100000"
+		pitch = "1.000000"
+		soundlevel = "78.000000"
+		distance_max = "2500.000000"
+		event_type = "1.000000"
+		vsnd_duration = 0.330499
+	}
+	OgreTank.GroundSmash = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/leshrac/split_earth.vsnd",
+		]
+		volume = "1.000000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "0.950000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "600.000000"
+		vsnd_duration = 3.780181
+	}
+	OgreTank.GroundSmash.Lesser = 
+	{
+		type = "dota_src1_3d"
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/leshrac/split_earth.vsnd",
+		]
+		volume = "0.500000"
+		pitch_rand_min = "-0.050000"
+		pitch_rand_max = "0.050000"
+		pitch = "0.950000"
+		soundlevel = "81.000000"
+		mixgroup = "Weapons"
+		spread_radius = "600.000000"
+		vsnd_duration = 3.780181
+	}
+	Dungeon.Egg_crash = 
+	{
+		type = "dota_src1_3d"
+		volume = 5.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 72.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/egg_crash.vsnd",
+		]
+	}
+	Boss.Killed = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.250000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 72.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/music/stingers/greevil_stingers/greevil_game_end.vsnd",
+		]
+		vsnd_duration = 5.590204
+	}
+	Boss.Scepter.Reward = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.500000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 100.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/alchemist/scepter_target.vsnd",
+		]
+		vsnd_duration = 4.395555
+	}
+	Violet_Blade.Strike.Start = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.750000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		pitch = 2.150000
+		soundlevel = 81.000000
+		mixgroup = "Weapons"
+		spread_radius = 150.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/antimage/blink_out.vsnd",
+		]
+		vsnd_duration = 2.037143
+	}
+	Violet_Blade.Strike.End = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.750000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		pitch = 2.150000
+		soundlevel = 81.000000
+		mixgroup = "Weapons"
+		spread_radius = 150.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/antimage/blink_in.vsnd",
+		]
+		vsnd_duration = 0.888889
+	}
+	OgreSpellBooster.X1 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 72.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/ogre_magi/multicast01.vsnd",
+		]
+		vsnd_duration = 1.993333
+	}
+	OgreSpellBooster.X2 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 72.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/ogre_magi/multicast02.vsnd",
+		]
+		vsnd_duration = 1.937075
+	}
+	OgreSpellBooster.X3 = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch_rand_min = 0.000000
+		pitch_rand_max = 0.000000
+		pitch = 1.000000
+		soundlevel = 72.000000
+		distance_max = 1200.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/ogre_magi/multicast03.vsnd",
+		]
+		vsnd_duration = 4.343356
+	}
+	Treasure.Box.Unlock = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		soundlevel = 75.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ui/inventory/treasure_unlock.vsnd",
+		]
+		vsnd_duration = 1.135419
+	}
+	Treasure.Box.Unlock.2D = 
+	{
+		type = "dota_src1_2d"
+		volume = 0.500000
+		pitch = 1.000000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		soundlevel = 75.000000
+		vsnd_files = 
+		[
+			"sounds/ui/inventory/treasure_unlock.vsnd",
+		]
+		vsnd_duration = 1.135419
+	}
+	Treasure.Box.Drop = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.950000
+		pitch = 1.000000
+		pitch_rand_min = -0.005000
+		pitch_rand_max = 0.005000
+		soundlevel = 100.000000
+		vsnd_files = 
+		[
+			"sounds/ui/stingers/stinger_loot_03.vsnd",
+		]
+		vsnd_duration = 7.008163
+	}
+	Treasure.Upgrades.Drop = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.750000
+		pitch = 1.000000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ui/treasure_01.vsnd",
+			"sounds/ui/treasure_02.vsnd",
+			"sounds/ui/treasure_03.vsnd",
+		]
+		vsnd_duration = 3.656009
+	}
+	Chest_Open_Locked = 
+	{
+		type = "dota_src1_2d"
+		volume = 5.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		soundlevel = 72.000000
+		vsnd_files = 
+		[
+			"sounds/npc/courier/lockjaw/lockjaw_run_creak_02.vsnd",
+		]
+		vsnd_duration = 0.310091
+	}
+	RewardScreenOpen = 
+	{
+		type = "dota_src1_2d"
+		volume = 2.250000
+		pitch = 1.000000
+		pitch_rand_min = -0.005000
+		pitch_rand_max = 0.005000
+		soundlevel = 72.000000
+		vsnd_files = 
+		[
+			"sounds/ui/npe_badge.vsnd",
+		]
+		vsnd_duration = 4.200000
+	}
+	RewardChosen.REWARD_TYPE_ABILITY_UPGRADE = 
+	{
+		type = "dota_addon_src1_2d"
+		volume_min = 0.750000
+		volume_max = 0.750000
+		pitch_min = 1.000000
+		pitch_max = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/ui/levelup_male.vsnd",
+		]
+		vsnd_duration = 2.460771
+	}
+	RewardChosen.REWARD_TYPE_MINOR_ABILITY_UPGRADE = 
+	{
+		type = "dota_addon_src1_2d"
+		volume_min = 0.850000
+		volume_max = 0.850000
+		pitch_min = 1.000000
+		pitch_max = 1.000000
+		event_type = 0.000000
+		memory_type = 0.000000
+		vsnd_files = 
+		[
+			"sounds/ui/levelup.vsnd",
+		]
+		vsnd_duration = 1.997052
+	}
+	Artifact.Muted.Info = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.000000
+		pitch = 1.000000
+		soundlevel = 75.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ui/panorama/panorama_quit_doto_click_01.vsnd",
+		]
+		vsnd_duration = 1.248980
+	}
+	Treasure.Show.Rewards = 
+	{
+		type = "dota_src1_2d"
+		volume = 1.100000
+		pitch = 1.050000
+		soundlevel = 75.000000
+		vsnd_files = 
+		[
+			"sounds/ui/crafting/gem_applied.vsnd",
+		]
+		vsnd_duration = 1.673107
+	}
+	Mount.Channeling.Start = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.000000
+		pitch = 1.000000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/mount_channeling.vsnd",
+		]
+		vsnd_duration = 3.410045
+	}
+	Mount.Crocodile.Spawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.850000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/crocodile_2.vsnd",
+		]
+		vsnd_duration = 2.761958
+	}
+	Mount.Crocodile.Despawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.850000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/crocodile_1.vsnd",
+		]
+		vsnd_duration = 1.690292
+	}
+	Mount.Carpet.Spawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.500000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/misc/soundboard/frostivus_magic.vsnd",
+		]
+		vsnd_duration = 4.283877
+	}
+	Mount.Carpet.Despawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.200000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 80.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/brewmaster/dispel_magic.vsnd",
+		]
+		vsnd_duration = 1.997687
+	}
+	Mount.Carpet.Move = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.500000
+		pitch = 1.350000
+		pitch_rand_min = -0.200000
+		pitch_rand_max = 0.200000
+		soundlevel = 85.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/physics/movement/hero/crystal_maiden/move01.vsnd",
+		]
+		vsnd_duration = 3.842313
+	}
+	Mount.Owl.Spawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.850000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ambient/soundscapes/diretide/diretide_owl_02.vsnd",
+		]
+		vsnd_duration = 3.700181
+	}
+	Mount.Owl.Despawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.750000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ambient/soundscapes/waterfowl_04.vsnd",
+		]
+		vsnd_duration = 2.653560
+	}
+	Mount.Owl.Move = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.700000
+		pitch = 1.350000
+		pitch_rand_min = -0.200000
+		pitch_rand_max = 0.200000
+		soundlevel = 65.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/physics/movement/hero/dragon_knight/flap1.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap2.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap3.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap4.vsnd",
+		]
+		vsnd_duration = 0.882064
+	}
+	Mount.Dragon.Spawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.750000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/ambient/dragon_spawn_nb24.vsnd",
+		]
+		vsnd_duration = 5.990771
+	}
+	Mount.Dragon.Despawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.750000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/misc/creep_deaths/death_dragonspawn_overseer.vsnd",
+		]
+		vsnd_duration = 1.141519
+	}
+	Mount.Dragon.Move = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.900000
+		pitch = 1.000000
+		pitch_rand_min = -0.200000
+		pitch_rand_max = 0.200000
+		soundlevel = 72.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/physics/movement/hero/dragon_knight/flap1.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap2.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap3.vsnd",
+			"sounds/physics/movement/hero/dragon_knight/flap4.vsnd",
+		]
+		vsnd_duration = 0.882064
+	}
+	Mount.Cloud.Spawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.250000
+		pitch = 1.250000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/magic_cloud_spawn.vsnd",
+		]
+		vsnd_duration = 2.340979
+	}
+	Mount.Cloud.Despawn = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.000000
+		pitch = 1.250000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 90.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		soundevent_layer2 = "Mount.Cloud.Despawn.Layer"
+		soundevent_layer2_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/magic_cloud_spawn.vsnd",
+		]
+		vsnd_duration = 2.340979
+	}
+	Mount.Cloud.Despawn.Layer = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.750000
+		pitch = 1.200000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 72.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/brewmaster/dispel_magic.vsnd",
+		]
+		vsnd_duration = 1.997687
+	}
+	Mount.Cloud.Move = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.500000
+		pitch = 0.970000
+		soundlevel = 74.000000
+		distance_max = 2000.000000
+		event_type = 4.000000
+		vsnd_files = 
+		[
+			"sounds/magic_cloud_run.vsnd",
+		]
+		vsnd_duration = 0.348979
+	}
+	Halloween_Pumpkin_Death = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.350000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/creep/greevil/death01.vsnd",
+			"sounds/weapons/creep/greevil/death02.vsnd",
+			"sounds/weapons/creep/greevil/death03.vsnd",
+			"sounds/weapons/creep/greevil/death04.vsnd",
+			"sounds/weapons/creep/greevil/death05.vsnd",
+		]
+		vsnd_duration = 1.461361
+	}
+	Love_Kiss_Custom_Death = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.550000
+		pitch = 1.200000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		mixgroup = "Weapons"
+		distance_max = 2000.000000
+		vsnd_files = 
+		[
+			"sounds/misc/soundboard/kiss.vsnd",
+		]
+		vsnd_duration = 0.780726
+	}
+	Fart.Custom.Death = 
+	{
+		type = "dota_src1_3d"
+		volume = 3.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.150000
+		pitch_rand_max = 0.150000
+		soundlevel = 100.000000
+		mixgroup = "Weapons"
+		distance_max = 2000.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/pudge/arc_taunt_finale.vsnd",
+		]
+		vsnd_duration = 0.266667
+	}
+	Eject.Custom.Death = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.500000
+		pitch = 1.000000
+		pitch_rand_min = -0.100000
+		pitch_rand_max = 0.100000
+		soundlevel = 100.000000
+		mixgroup = "Weapons"
+		distance_max = 2000.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/pudge/eject.vsnd",
+		]
+		vsnd_duration = 1.087042
+	}
+	Hellbear.Smash.Brewmaster = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 100.000000
+		distance_max = 2000.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/hero/brewmaster/thunder_clap.vsnd",
+		]
+		vsnd_duration = 2.047438
+	}
+	Hellbear.Smash.Ursa = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.500000
+		pitch = 1.000000
+		soundlevel = 78.000000
+		distance_max = 1500.000000
+		event_type = 1.000000
+		vsnd_files = 
+		[
+			"sounds/weapons/creep/neutral/ursa_thunder_clap_01.vsnd",
+		]
+		vsnd_duration = 3.511292
+	}
+	Ability_Pick_Ban = 
+	{
+		type = "dota_src1_2d"
+		vsnd_files = 
+		[
+			"sounds/vo/announcer/ann_custom_vote_begun.vsnd",
+		]
+		volume = "1.500000"
+		soundlevel = 75.000000
+		pitch = "1.000000"
+		vsnd_duration = 1.645714
+	}
+	Tower.Spawn.Portal = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.250000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/ui/portal_appear.vsnd",
+		]
+		vsnd_duration = 2.091995
+	}
+	Spring2021.Kobold.Rush = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.200000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		pitch = 1.000000
+		soundlevel = 81.000000
+		limiter_on = 0.000000
+		vsnd_files = 
+		[
+			"sounds/items/mask_of_madness.vsnd",
+		]
+		vsnd_duration = 4.782381
+	}
+	high_five.impact = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_impact.vsnd"
+		vsnd_duration = 1.552608
+	}
+	high_five.cast = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 78.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_cast.vsnd"
+		vsnd_duration = 0.425760
+	}
+	high_five.fail = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.500000
+		pitch = 2.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 78.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_fail.vsnd"
+		vsnd_duration = 2.931814
+	}
+	high_five.impact.2023 = 
+	{
+		type = "dota_src1_3d"
+		volume = 0.750000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		soundevent_layer2 = "high_five.impact.layer"
+		soundevent_layer2_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_impact.vsnd"
+		vsnd_duration = 1.552608
+	}
+	high_five.impact.layer = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 90.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_impact2023.vsnd"
+		vsnd_duration = 2.999433
+	}
+	high_five.cast.2023 = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 78.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		soundevent_layer2 = "high_five.cast.layer"
+		soundevent_layer2_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_cast.vsnd"
+		vsnd_duration = 0.425760
+	}
+	high_five.cast.layer = 
+	{
+		type = "dota_src1_3d"
+		volume = 1.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 78.000000
+		distance_max = 2500.000000
+		limiter_on = 1.000000
+		vsnd_files = "sounds/misc/hi_five_cast2023.vsnd"
+		vsnd_duration = 3.583968
+	}
+	high_five.Cat.cast = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.150000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/high_five_meow_cast_2.vsnd",
+			"sounds/high_five_meow_cast_3.vsnd",
+		]
+	}
+	high_five.Cat.fail = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.150000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/high_five_meow_fail.vsnd",
+		]
+	}
+	high_five.Dragon.cast = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.500000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/misc/ny_dragon_spawn.vsnd",
+		]
+		vsnd_duration = 2.790839
+	}
+	high_five.Dragon.fail = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.200000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 81.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/misc/ny_dragon_end.vsnd",
+		]
+		vsnd_duration = 3.222358
+	}
+	high_five.Aghanim.cast = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 91.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/misc/aghanim/aghs_fight_attack_04a.vsnd",
+			"sounds/misc/aghanim/aghs_fight_attack_04b.vsnd",
+			"sounds/misc/aghanim/aghs_fight_attack_04c.vsnd",
+		]
+		vsnd_duration = 2.477370
+	}
+	high_five.Aghanim.fail = 
+	{
+		type = "dota_src1_3d"
+		volume = 2.000000
+		pitch = 1.000000
+		pitch_rand_min = -0.050000
+		pitch_rand_max = 0.050000
+		soundlevel = 91.000000
+		distance_max = 2000.000000
+		limiter_on = 1.000000
+		vsnd_files = 
+		[
+			"sounds/misc/aghanim/aghs_fight_attack_05c.vsnd",
+		]
+		vsnd_duration = 2.286123
+	}
+}
