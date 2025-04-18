@@ -1,0 +1,10 @@
+"Layer0"
+{
+	"Shader"		"hero.vfx"
+	"F_MASKS_1"		"1"
+	"F_MASKS_2"		"1"
+	"g_flSpecularExponent"		"20.000000"
+	"g_flSpecularScale"		"2.000000"
+	"g_flRimLightScale"		"1.000000"
+	"F_USE_STATUS_EFFECTS_PROXY"		"1"
+}
