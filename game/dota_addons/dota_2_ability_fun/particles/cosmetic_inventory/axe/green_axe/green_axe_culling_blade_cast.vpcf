@@ -1,0 +1,74 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vrfunknown:version{39d3ce1d-9442-4407-9b78-8317145b1732} -->
+{
+	_class = "CParticleSystemDefinition"
+	m_nBehaviorVersion = 12
+	m_nMaxParticles = 0
+	m_controlPointConfigurations = 
+	[
+		
+		{
+			m_name = "preview"
+			m_drivers = 
+			[
+				
+				{
+					m_iControlPoint = 1
+					m_iAttachType = "PATTACH_POINT_FOLLOW"
+					m_attachmentName = "attach_attack1"
+					m_entityName = "self"
+				},
+			]
+			m_previewState = 
+			{
+				m_previewModel = "models/items/axe/ti9_jungle_axe/axe_bare.vmdl"
+				m_sequenceName = "ti9_axe_culling_blade"
+				m_hitboxSetName = "default"
+			}
+		},
+		
+		{
+			m_name = "cast"
+			m_drivers = 
+			[
+				
+				{
+					m_iControlPoint = 1
+					m_iAttachType = "PATTACH_POINT_FOLLOW"
+					m_attachmentName = "attach_attack1"
+					m_entityName = "parent"
+				},
+			]
+			m_previewState = 
+			{
+				m_previewModel = "models/items/axe/ti9_jungle_axe/axe_bare.vmdl"
+				m_sequenceName = "ti9_axe_culling_blade"
+				m_hitboxSetName = "default"
+				m_flParticleSimulationRate = 0.200000
+			}
+		},
+	]
+	m_PreEmissionOperators = 
+	[
+	]
+	m_Children = 
+	[
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_culling_blade_cast_hand_glow.vpcf"
+			m_flDelay = 0.250000
+		},
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_culling_blade_cast_hand.vpcf"
+			m_flDelay = 0.200000
+		},
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_culling_blade_cast_arc.vpcf"
+		},
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_culling_blade_cast_arc_core.vpcf"
+		},
+	]
+}

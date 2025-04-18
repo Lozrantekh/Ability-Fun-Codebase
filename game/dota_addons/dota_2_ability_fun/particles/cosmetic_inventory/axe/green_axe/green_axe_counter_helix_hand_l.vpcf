@@ -1,0 +1,65 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vrfunknown:version{39d3ce1d-9442-4407-9b78-8317145b1732} -->
+{
+	_class = "CParticleSystemDefinition"
+	m_bShouldHitboxesFallbackToRenderBounds = false
+	m_nMaxParticles = 1
+	m_controlPointConfigurations = 
+	[
+		
+		{
+			m_name = "preview"
+		},
+	]
+	m_nBehaviorVersion = 12
+	m_nFirstMultipleOverride_BackwardCompat = 4
+	m_ConstantColor = 
+	[
+		255,
+		0,
+		0,
+		255,
+	]
+	m_ConstantNormal = 
+	[
+		1.000000,
+		0.000000,
+		0.000000,
+	]
+	m_Children = 
+	[
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_counter_helix_hand_glow.vpcf"
+		},
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_counter_helix_hand_ember.vpcf"
+		},
+		
+		{
+			m_ChildRef = resource:"particles/cosmetic_inventory/axe/green_axe/green_axe_counter_helix_hand_fire.vpcf"
+		},
+	]
+	m_PreEmissionOperators = 
+	[
+		
+		{
+			_class = "C_OP_SetSingleControlPointPosition"
+			m_vecCP1Pos = 
+			[
+				0.000000,
+				0.000000,
+				0.000000,
+			]
+			m_transformInput = 
+			{
+				m_nControlPoint = 2
+			}
+		},
+		
+		{
+			_class = "C_OP_SetControlPointOrientation"
+			m_nHeadLocation = 2
+		},
+	]
+}
