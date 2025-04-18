@@ -1,0 +1,10 @@
+"Layer0"
+{
+	"shader"	"ui.vfx"
+	"F_TRANSLUCENT"	"0"
+	"Texture"	"materials/overviews/dota.png"
+	"Compiled Textures"
+	{
+		"g_tColor"	"materials/overviews/dota_tga_d8178876.vtex"
+	}
+}
