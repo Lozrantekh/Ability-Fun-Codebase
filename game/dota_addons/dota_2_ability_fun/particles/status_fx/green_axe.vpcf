@@ -1,0 +1,108 @@
+<!-- kv3 encoding:text:version{e21c7f3c-8a33-41c5-9977-a76d3a32aa0d} format:vrfunknown:version{39d3ce1d-9442-4407-9b78-8317145b1732} -->
+{
+	_class = "CParticleSystemDefinition"
+	m_nMaxParticles = 5
+	m_nInitialParticles = 2
+	m_flConstantRadius = 188.000000
+	m_ConstantColor = 
+	[
+		0,
+		20,
+		0,
+		255,
+	]
+	m_nConstantSequenceNumber = 1
+	m_nBehaviorVersion = 12
+	m_bScreenSpaceEffect = true
+	m_controlPointConfigurations = 
+	[
+		
+		{
+			m_name = "preview"
+		},
+	]
+	m_Initializers = 
+	[
+		
+		{
+			_class = "C_INIT_InitFloat"
+			m_InputValue = 
+			{
+				m_nType = "PF_TYPE_RANDOM_UNIFORM"
+				m_flRandomMin = 0.800000
+				m_flRandomMax = 5.000000
+				m_nRandomMode = "PF_RANDOM_MODE_CONSTANT"
+			}
+			m_nOutputField = 7
+		},
+		
+		{
+			_class = "C_INIT_RandomColor"
+			m_ColorMin = 
+			[
+				86,
+				255,
+				43,
+			]
+			m_ColorMax = 
+			[
+				28,
+				189,
+				0,
+			]
+			m_TintMax = 
+			[
+				0,
+				0,
+				0,
+			]
+			m_flTintPerc = 1.000000
+			m_flUpdateThreshold = 128.000000
+			m_nFieldOutput = 17
+			m_nAssociatedEmitterIndex = 1
+		},
+		
+		{
+			_class = "C_INIT_StatusEffect"
+			m_nDetail2Combo = "DETAIL_2_COMBO_ADD"
+			m_flDetail2Scale = 1.000000
+			m_flColorWarpIntensity = 1.000000
+			m_flAmbientScale = 1.500000
+			m_specularColor = 
+			[
+				159,
+				255,
+				183,
+			]
+			m_flSpecularScale = 0.050000
+			m_flSpecularExponent = 0.150000
+			m_flSpecularExponentBlendToFull = 1.000000
+			m_flSpecularBlendToFull = 0.500000
+			m_rimLightColor = 
+			[
+				58,
+				237,
+				34,
+			]
+			m_flRimLightScale = 140.000000
+			m_flDetail2Rotation = 1.000000
+			m_flDetail2BlendFactor = 1.000000
+		},
+	]
+	m_Operators = 
+	[
+		
+		{
+			_class = "C_OP_EndCapTimedDecay"
+		},
+	]
+	m_Renderers = 
+	[
+		
+		{
+			_class = "C_OP_RenderStatusEffect"
+			m_pTextureColorWarp = resource:"materials/particle/green_surface_color_psd_e4a3f365.vtex"
+			m_pTextureDetail2 = resource:"materials/particle/green_surface_color_psd_e4a3f365.vtex"
+		},
+	]
+}
